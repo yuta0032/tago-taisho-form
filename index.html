@@ -2,523 +2,106 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<title>退院・退所情報記録書</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ケアマネ業務ツール</title>
 <style>
-:root{
-  --bg:#eef1f4;--card:#fff;--line:#dde3ea;--ink:#1d2733;--ink2:#5a6877;--muted:#8b97a5;
-  --teal:#0d8f7e;--teal-d:#0a6e61;--teal-soft:#d8f3ee;--teal-line:#67c5b6;--amber:#b9772a;
-  --shadow:0 1px 2px rgba(20,40,60,.05),0 6px 18px rgba(20,40,60,.06);--r:14px;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0}
-body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
-  background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;padding-bottom:140px;-webkit-text-size-adjust:100%}
-.topbar{position:sticky;top:0;z-index:30;background:linear-gradient(180deg,#0d8f7e,#0a6e61);color:#fff;
-  padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));box-shadow:0 2px 10px rgba(10,80,70,.25)}
-.topbar h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.02em}
-.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
-.datebar{display:flex;align-items:center;gap:8px;margin-top:10px;background:rgba(255,255,255,.14);border-radius:10px;padding:7px 10px}
-.datebar label{font-size:12px;opacity:.9;white-space:nowrap}
-.datebar input{flex:1;border:0;background:transparent;color:#fff;font-size:15px;font-family:inherit;outline:none}
-.datebar input::-webkit-calendar-picker-indicator{filter:invert(1)}
-.wrap{max-width:560px;margin:0 auto;padding:14px 12px}
-.group{margin-top:18px}
-.group-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--teal-d);margin:0 6px 8px;letter-spacing:.03em}
-.group-title .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--teal);color:#fff;font-size:12px;font-weight:700}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
-.field{padding:13px 14px;border-top:1px solid var(--line)}
-.field:first-child{border-top:0}
-.field>.lab{font-size:12.5px;font-weight:700;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-bottom:9px}
-.lab .tag{font-size:10px;font-weight:700;color:var(--teal-d);background:var(--teal-soft);border-radius:5px;padding:1px 6px}
-.row2{display:flex;gap:10px}
-.row2>*{flex:1;min-width:0}
-input[type=text],input[type=number],input[type=date],textarea,select{width:100%;border:1px solid var(--line);background:#fbfcfd;border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
-input:focus,textarea:focus,select:focus{border-color:var(--teal-line);box-shadow:0 0 0 3px rgba(13,143,126,.14);background:#fff}
-textarea{resize:vertical;min-height:78px;line-height:1.6}
-.hint-ex{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:8px;padding:9px 10px;background:#f7f9fa;border-radius:9px;border:1px dashed var(--line)}
-.inline-input{border:0;border-bottom:1.5px solid var(--teal-line);background:transparent;border-radius:0;padding:3px 4px;font-size:14px;width:auto;min-width:60px}
-.inline-input:focus{box-shadow:none;background:rgba(13,143,126,.06)}
-.sep{height:1px;background:var(--line);margin:11px 0}
-.subhead{font-size:12px;font-weight:700;color:var(--ink2);margin:2px 0 8px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{appearance:none;border:1.5px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:14px;font-weight:500;border-radius:999px;padding:9px 14px;min-height:42px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .12s ease;user-select:none}
-.chip:active{transform:scale(.96)}
-.chip.on{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(13,143,126,.3)}
-.chip.on::before{content:"✓";font-size:12px;font-weight:700}
-.chip.no.on{background:#6b7785;border-color:#6b7785;box-shadow:none}
-.chip-extra{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:9px;font-size:13px;color:var(--ink2)}
-.chip-extra label{white-space:nowrap}
-.hear{padding:13px 14px}
-.hear .item{border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:10px;background:#fbfcfd}
-.hear .item .no{font-size:11px;font-weight:700;color:var(--teal-d);margin-bottom:8px}
-.mini-lab{font-size:11px;color:var(--muted);margin-bottom:4px}
-.note{font-size:11.5px;color:var(--ink2);line-height:1.6;padding:11px 14px;background:#fff8ee;border:1px solid #f0e2c8;border-radius:11px;margin-top:4px}
-.note b{color:var(--amber)}
-.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
-.actionbar .inner{display:flex;gap:10px;max-width:560px;margin:0 auto}
-.btn{flex:1;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .1s,filter .15s}
-.btn:active{transform:scale(.97)}
-.btn:disabled{opacity:.6}
-.btn-excel{background:#157347;color:#fff;box-shadow:0 4px 12px rgba(21,115,71,.3)}
-.btn-print{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(13,143,126,.3)}
-.btn-ghost{background:#eef1f4;color:var(--ink2);flex:0 0 auto;padding:14px 16px}
-.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:#1d2733;color:#fff;font-size:13px;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:84%;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-/* Excel様式の印刷用テーブル（画面では非表示、印刷時のみ表示） */
-#printArea{display:none}
-.xl-table{border-collapse:collapse;table-layout:fixed;margin:0 auto;background:#fff;color:#000;
-  font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","MS PGothic",sans-serif}
-.xl-table td{overflow:hidden;word-break:break-word;line-height:1.22;padding:0 2px;box-sizing:border-box}
-@media print{
-  @page{size:A4 portrait;margin:6mm}
-  html,body{background:#fff;padding:0;margin:0}
-  .topbar,.wrap,.actionbar,.toast{display:none!important}
-  #printArea{display:block!important}
-  .xl-table{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-}
+  :root{
+    --bg:#eef1f5; --ink:#1d2733; --muted:#5b6877; --line:#dde3ea;
+    --teal:#0d8f7e; --teal-d:#0a6e61; --blue:#34507c; --blue-d:#2b4368;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;min-height:100%;}
+  body{
+    font-family:"Meiryo UI","Yu Gothic UI","Hiragino Kaku Gothic ProN","MS PGothic",sans-serif;
+    background:
+      radial-gradient(1200px 500px at 50% -8%, #ffffff 0%, rgba(255,255,255,0) 60%),
+      var(--bg);
+    color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:max(28px,env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+  }
+  .head{text-align:center;margin:14px 0 26px;}
+  .head .mark{
+    width:54px;height:54px;border-radius:15px;margin:0 auto 12px;
+    background:linear-gradient(135deg,var(--teal),var(--blue));
+    display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(40,70,120,.22);
+  }
+  .head h1{margin:0;font-size:21px;font-weight:700;letter-spacing:.02em;}
+  .head p{margin:6px 0 0;font-size:13px;color:var(--muted);}
+
+  .menu{
+    width:100%;max-width:620px;display:grid;gap:16px;
+    grid-template-columns:1fr 1fr;
+  }
+  .card{
+    display:flex;flex-direction:column;text-decoration:none;color:inherit;
+    background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 20px;
+    box-shadow:0 2px 10px rgba(40,60,90,.06);transition:transform .12s,box-shadow .15s,border-color .15s;
+    position:relative;overflow:hidden;min-height:210px;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(40,60,90,.16);}
+  .card:active{transform:translateY(0);}
+  .card:focus-visible{outline:3px solid #2f6db0;outline-offset:2px;}
+  .card .ribbon{position:absolute;inset:0 0 auto 0;height:6px;}
+  .card.k .ribbon{background:linear-gradient(90deg,var(--teal),var(--teal-d));}
+  .card.g .ribbon{background:linear-gradient(90deg,var(--blue),var(--blue-d));}
+  .card .ico{
+    width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:6px 0 14px;
+  }
+  .card.k .ico{background:#def3ee;color:var(--teal-d);}
+  .card.g .ico{background:#e6ecf5;color:var(--blue);}
+  .card .ico svg{width:30px;height:30px;}
+  .card h2{margin:0 0 6px;font-size:16.5px;font-weight:700;line-height:1.35;}
+  .card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.6;flex:1;}
+  .card .go{
+    margin-top:14px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;
+  }
+  .card.k .go{color:var(--teal-d);}
+  .card.g .go{color:var(--blue);}
+  .card .go svg{width:15px;height:15px;}
+
+  .foot{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;}
+
+  @media (max-width:560px){
+    .menu{grid-template-columns:1fr;}
+    .card{min-height:0;}
+  }
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <h1>退院・退所情報記録書</h1>
-  <div class="sub">スマートフォン入力版</div>
-  <div class="datebar"><label>記入日</label><input type="date" id="recDate"></div>
-</div>
-
-<div class="wrap">
-
-  <!-- 1 -->
-  <div class="group">
-    <div class="group-title"><span class="n">1</span>基本情報・現在の状態 等</div>
-
-    <div class="card">
-      <div class="field">
-        <div class="lab">属性</div>
-        <div><div class="mini-lab">フリガナ</div><input type="text" inputmode="kana" data-k="furigana" placeholder="フリガナ"></div>
-        <div style="height:10px"></div>
-        <div><div class="mini-lab">氏名</div><input type="text" data-k="name" placeholder="氏名"></div>
-      </div>
-      <div class="field">
-        <div class="lab">性別 / 年齢</div>
-        <div class="row2" style="align-items:flex-end">
-          <div><div class="chips" data-single data-grp="sex"><button class="chip" data-v="男">男</button><button class="chip" data-v="女">女</button></div></div>
-          <div style="flex:0 0 96px"><div class="chip-extra" style="margin-top:0"><input type="number" inputmode="numeric" data-k="age" placeholder="—" style="text-align:center"><label>歳</label></div></div>
-        </div>
-      </div>
-      <div class="field">
-        <div class="lab">退院（所）時の要介護度</div>
-        <div class="chips" data-single data-grp="care">
-          <button class="chip" data-v="要支援">要支援</button><button class="chip" data-v="要介護">要介護</button>
-          <button class="chip no" data-v="申請中">申請中</button><button class="chip no" data-v="なし">なし</button>
-        </div>
-        <div class="chip-extra"><label>区分（数字）</label><input class="inline-input" type="text" inputmode="numeric" data-k="careNum" style="width:54px">
-          <span style="margin-left:6px"></span>
-          <div class="chips" data-grp="kubun" style="display:inline-flex"><button class="chip" data-v="要区分変更" style="min-height:36px;padding:6px 12px">区分変更あり</button></div>
-        </div>
-      </div>
+  <div class="head">
+    <div class="mark">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><circle cx="8" cy="7" r="3"/><rect x="14" y="4.2" width="5.6" height="5.6" rx="1"/><line x1="8" y1="10" x2="8" y2="18"/><path d="M5 18h6" /><line x1="16.8" y1="9.8" x2="16.8" y2="14"/></svg>
     </div>
-
-    <div class="card">
-      <div class="field">
-        <div class="lab">入院（所）概要</div>
-        <div class="row2">
-          <div><div class="mini-lab">入院（所）日</div><input type="date" data-k="admitDate"></div>
-          <div><div class="mini-lab">退院（所）予定日</div><input type="date" data-k="dischargeDate"></div>
-        </div>
-      </div>
-      <div class="field"><div class="lab">入院原因疾患（入所目的等）</div><textarea data-k="cause" placeholder="入院・入所の原因疾患、入所目的など"></textarea></div>
-      <div class="field">
-        <div class="lab">入院・入所先</div>
-        <input type="text" data-k="facility" placeholder="施設名">
-        <div class="row2" style="margin-top:10px">
-          <div><div class="mini-lab">棟</div><input type="text" data-k="ward" placeholder="棟"></div>
-          <div><div class="mini-lab">室</div><input type="text" data-k="room" placeholder="室"></div>
-        </div>
-      </div>
-      <div class="field">
-        <div class="lab">今後の医学管理</div>
-        <input type="text" data-k="medInst" placeholder="医療機関名">
-        <div class="subhead" style="margin-top:11px">方法</div>
-        <div class="chips" data-single data-grp="medm"><button class="chip" data-v="通院">通院</button><button class="chip" data-v="訪問診療">訪問診療</button></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="field">
-        <div class="lab"><span class="tag">①</span>疾患と入院（所）中の状況</div>
-        <div class="subhead">現在治療中の疾患</div>
-        <div><div class="mini-lab">① 疾患</div><input type="text" data-k="dis1"></div>
-        <div style="margin-top:8px"><div class="mini-lab">② 疾患</div><input type="text" data-k="dis2"></div>
-        <div style="margin-top:8px"><div class="mini-lab">③ 疾患</div><input type="text" data-k="dis3"></div>
-        <div class="sep"></div>
-        <div class="subhead">疾患の状況（※番号記入）</div>
-        <div class="chip-extra" style="margin-top:0"><label>安定</label><input class="inline-input" type="text" data-k="stableNo" placeholder="例）①③"><span style="margin:0 4px"></span><label>不安定</label><input class="inline-input" type="text" data-k="unstableNo" placeholder="例）②"></div>
-      </div>
-      <div class="field"><div class="lab">移動手段</div>
-        <div class="chips" data-grp="move"><button class="chip" data-v="自立">自立</button><button class="chip" data-v="杖">杖</button><button class="chip" data-v="歩行器">歩行器</button><button class="chip" data-v="車いす">車いす</button><button class="chip" data-v="その他">その他</button></div>
-        <div class="chip-extra"><label>その他</label><input class="inline-input" type="text" data-k="moveOther" style="flex:1"></div></div>
-      <div class="field"><div class="lab">排泄方法</div>
-        <div class="chips" data-grp="exc"><button class="chip" data-v="トイレ">トイレ</button><button class="chip" data-v="ポータブル">ポータブル</button><button class="chip" data-v="おむつ">おむつ</button></div>
-        <div class="chip-extra"><label>カテーテル・パウチ</label><input class="inline-input" type="text" data-k="cathPouch" style="flex:1"></div></div>
-      <div class="field"><div class="lab">入浴方法</div>
-        <div class="chips" data-single data-grp="bath"><button class="chip" data-v="自立">自立</button><button class="chip" data-v="シャワー浴">シャワー浴</button><button class="chip" data-v="一般浴">一般浴</button><button class="chip" data-v="機械浴">機械浴</button><button class="chip no" data-v="行わず">行わず</button></div></div>
-      <div class="field"><div class="lab">食事形態</div>
-        <div class="chips" data-grp="food"><button class="chip" data-v="普通">普通</button><button class="chip" data-v="経管栄養">経管栄養</button><button class="chip" data-v="その他">その他</button></div>
-        <div class="chip-extra"><label>その他</label><input class="inline-input" type="text" data-k="foodOther" style="flex:1"></div>
-        <div class="chip-extra"><label>UDF等の食形態区分</label><input class="inline-input" type="text" data-k="udf" style="flex:1"></div></div>
-      <div class="field"><div class="lab">嚥下機能（むせ）</div>
-        <div class="chips" data-single data-grp="swal"><button class="chip no" data-v="なし">なし</button><button class="chip" data-v="あり">あり</button></div>
-        <div class="subhead" style="margin-top:10px">頻度</div>
-        <div class="chips" data-single data-grp="swalf"><button class="chip" data-v="時々" style="min-height:38px">時々</button><button class="chip" data-v="常に" style="min-height:38px">常に</button></div></div>
-      <div class="field"><div class="lab">義歯</div>
-        <div class="chips" data-single data-grp="dent"><button class="chip no" data-v="なし">なし</button><button class="chip" data-v="あり">あり</button></div>
-        <div class="subhead" style="margin-top:10px">種類</div>
-        <div class="chips" data-single data-grp="dentt"><button class="chip" data-v="部分" style="min-height:38px">部分</button><button class="chip" data-v="総" style="min-height:38px">総</button></div></div>
-      <div class="field"><div class="lab">口腔清潔</div>
-        <div class="chips" data-single data-grp="oc"><button class="chip" data-v="良">良</button><button class="chip" data-v="不良">不良</button><button class="chip" data-v="著しく不良">著しく不良</button></div>
-        <div class="subhead" style="margin-top:11px">入院（所）中の使用</div>
-        <div class="chips" data-single data-grp="ou"><button class="chip no" data-v="なし" style="min-height:38px">なし</button><button class="chip" data-v="あり" style="min-height:38px">あり</button></div></div>
-      <div class="field"><div class="lab">口腔ケア</div>
-        <div class="chips" data-single data-grp="ocare"><button class="chip" data-v="自立">自立</button><button class="chip" data-v="一部介助">一部介助</button><button class="chip" data-v="全介助">全介助</button></div></div>
-      <div class="field"><div class="lab">睡眠</div>
-        <div class="chips" data-single data-grp="sleep"><button class="chip" data-v="良好">良好</button><button class="chip" data-v="不良">不良</button></div>
-        <div class="chip-extra"><label>不良の内容</label><input class="inline-input" type="text" data-k="sleepBad" style="flex:1"></div>
-        <div class="subhead" style="margin-top:11px">眠剤使用</div>
-        <div class="chips" data-single data-grp="sm"><button class="chip no" data-v="なし" style="min-height:38px">なし</button><button class="chip" data-v="あり" style="min-height:38px">あり</button></div></div>
-      <div class="field"><div class="lab">認知・精神</div>
-        <div class="chips" data-grp="cog"><button class="chip" data-v="認知機能低下">認知機能低下</button><button class="chip" data-v="せん妄">せん妄</button><button class="chip" data-v="徘徊">徘徊</button><button class="chip" data-v="焦燥・不穏">焦燥・不穏</button><button class="chip" data-v="攻撃性">攻撃性</button><button class="chip" data-v="その他">その他</button></div>
-        <div class="chip-extra"><label>その他</label><input class="inline-input" type="text" data-k="cogOther" style="flex:1"></div></div>
-    </div>
-
-    <div class="card">
-      <div class="field"><div class="lab"><span class="tag">②</span>受け止め / 意向</div>
-        <div class="subhead">＜本人＞病気・障害・後遺症等の受け止め方</div><textarea data-k="hnUketome"></textarea>
-        <div class="subhead" style="margin-top:11px">本人への病名告知</div>
-        <div class="chips" data-single data-grp="tn"><button class="chip" data-v="あり" style="min-height:38px">あり</button><button class="chip no" data-v="なし" style="min-height:38px">なし</button></div></div>
-      <div class="field"><div class="lab">＜本人＞退院後の生活に関する意向</div><textarea data-k="hnIko"></textarea></div>
-      <div class="field"><div class="lab">＜家族＞病気・障害・後遺症等の受け止め方</div><textarea data-k="kzUketome"></textarea></div>
-      <div class="field"><div class="lab">＜家族＞退院後の生活に関する意向</div><textarea data-k="kzIko"></textarea></div>
-    </div>
+    <h1>ケアマネ業務ツール</h1>
+    <p>使うツールを選んでください</p>
   </div>
 
-  <!-- 2 -->
-  <div class="group">
-    <div class="group-title"><span class="n">2</span>課題認識のための情報</div>
+  <nav class="menu">
+    <a class="card k" href="kiroku.html">
+      <span class="ribbon"></span>
+      <span class="ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z"/><path d="M8 12h8M8 16h6" stroke-linecap="round"/></svg>
+      </span>
+      <h2>退院・退所情報記録書</h2>
+      <p>スマホで入力して、Excel様式での出力・印刷／PDF化ができます。</p>
+      <span class="go">ひらく
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
 
-    <div class="card">
-      <div class="field"><div class="lab"><span class="tag">③</span>退院後に必要な事柄 ― 医療処置の内容</div>
-        <div class="chips" style="margin-bottom:9px" data-grp="mpn"><button class="chip no" data-v="なし">なし</button></div>
-        <div class="chips" data-grp="mp">
-          <button class="chip" data-v="点滴">点滴</button><button class="chip" data-v="酸素療法">酸素療法</button><button class="chip" data-v="喀痰吸引">喀痰吸引</button><button class="chip" data-v="気管切開">気管切開</button><button class="chip" data-v="胃ろう">胃ろう</button><button class="chip" data-v="経鼻栄養">経鼻栄養</button><button class="chip" data-v="経腸栄養">経腸栄養</button><button class="chip" data-v="褥瘡">褥瘡</button><button class="chip" data-v="尿道カテーテル">尿道カテーテル</button><button class="chip" data-v="尿路ストーマ">尿路ストーマ</button><button class="chip" data-v="消化管ストーマ">消化管ストーマ</button><button class="chip" data-v="痛みコントロール">痛みコントロール</button><button class="chip" data-v="排便コントロール">排便コントロール</button><button class="chip" data-v="自己注射">自己注射</button><button class="chip" data-v="その他">その他</button></div>
-        <div class="chip-extra"><label>自己注射</label><input class="inline-input" type="text" data-k="injectOther" style="flex:1"></div>
-        <div class="chip-extra"><label>その他</label><input class="inline-input" type="text" data-k="mpOther" style="flex:1"></div></div>
-      <div class="field"><div class="lab">看護の視点</div>
-        <div class="chips" style="margin-bottom:9px" data-grp="nn"><button class="chip no" data-v="なし">なし</button></div>
-        <div class="chips" data-grp="nur">
-          <button class="chip" data-v="血圧">血圧</button><button class="chip" data-v="水分制限">水分制限</button><button class="chip" data-v="食事制限">食事制限</button><button class="chip" data-v="食形態">食形態</button><button class="chip" data-v="嚥下">嚥下</button><button class="chip" data-v="口腔ケア">口腔ケア</button><button class="chip" data-v="清潔ケア">清潔ケア</button><button class="chip" data-v="血糖コントロール">血糖コントロール</button><button class="chip" data-v="排泄">排泄</button><button class="chip" data-v="皮膚状態">皮膚状態</button><button class="chip" data-v="睡眠">睡眠</button><button class="chip" data-v="認知機能・精神面">認知機能・精神面</button><button class="chip" data-v="服薬指導">服薬指導</button><button class="chip" data-v="療養上の指導">療養上の指導</button><button class="chip" data-v="ターミナル">ターミナル</button><button class="chip" data-v="その他">その他</button></div>
-        <div class="chip-extra"><label>その他</label><input class="inline-input" type="text" data-k="nurOther" style="flex:1"></div></div>
-      <div class="field"><div class="lab">リハビリの視点</div>
-        <div class="chips" style="margin-bottom:9px" data-grp="rn"><button class="chip no" data-v="なし">なし</button></div>
-        <div class="chips" data-grp="reha">
-          <button class="chip" data-v="本人指導">本人指導</button><button class="chip" data-v="家族指導">家族指導</button><button class="chip" data-v="関節可動域練習">関節可動域練習</button><button class="chip" data-v="筋力増強練習">筋力増強練習</button><button class="chip" data-v="バランス練習">バランス練習</button><button class="chip" data-v="麻痺・筋緊張改善">麻痺・筋緊張改善</button><button class="chip" data-v="起居／立位等基本動作練習">基本動作練習</button><button class="chip" data-v="摂食・嚥下訓練">摂食・嚥下訓練</button><button class="chip" data-v="言語訓練">言語訓練</button><button class="chip" data-v="ADL練習">ADL練習</button><button class="chip" data-v="IADL練習">IADL練習</button><button class="chip" data-v="疼痛管理">疼痛管理</button><button class="chip" data-v="更生装具・福祉用具等管理">装具・福祉用具管理</button><button class="chip" data-v="運動耐容能練習">運動耐容能練習</button><button class="chip" data-v="地域活動支援">地域活動支援</button><button class="chip" data-v="社会参加支援">社会参加支援</button><button class="chip" data-v="就労支援">就労支援</button><button class="chip" data-v="その他">その他</button></div>
-        <div class="chip-extra"><label>その他</label><input class="inline-input" type="text" data-k="rehaOther" style="flex:1"></div></div>
-      <div class="field"><div class="lab">禁忌事項</div>
-        <div class="chips" data-single data-grp="kinki"><button class="chip no" data-v="なし">なし</button><button class="chip" data-v="あり">あり</button></div>
-        <div class="subhead" style="margin-top:11px">禁忌の内容 / 留意点</div><textarea data-k="kinkiNaiyou"></textarea></div>
-    </div>
+    <a class="card g" href="genogram.html">
+      <span class="ribbon"></span>
+      <span class="ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="7" cy="6.5" r="2.6"/><rect x="14.4" y="4" width="5" height="5"/><line x1="7" y1="9.1" x2="7" y2="15"/><line x1="16.9" y1="9" x2="16.9" y2="13"/><path d="M4 18.5h6M14 18.5h6" stroke-dasharray="2.2 2.2" stroke-linecap="round"/></svg>
+      </span>
+      <h2>ジェノグラム・エコマップ</h2>
+      <p>家族関係図（ジェノグラム）と社会資源図（エコマップ）を作成・保存できます。</p>
+      <span class="go">ひらく
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
+  </nav>
 
-    <div class="card">
-      <div class="field"><div class="lab">症状・病状の予後・予測<br>退院に際しての日常生活の阻害要因（心身状況・環境等）</div>
-        <textarea data-k="yogo" style="min-height:120px"></textarea>
-        <div class="hint-ex">例）医療機関からの見立て・意見（今後の見通し、急変の可能性、合併症など起こりうること、良くなる方向かゆっくり落ちていく方向か 等）について、①疾患と入院中の状況、②本人・家族の受け止めや意向、③退院後に必要な事柄、④その他の観点から、必要と思われる事項を記載します。</div></div>
-      <div class="field"><div class="lab">在宅復帰のために整えなければならない要件</div><textarea data-k="youken" style="min-height:100px"></textarea></div>
-    </div>
-
-    <div class="card"><div class="hear">
-      <div class="lab" style="margin-bottom:11px">聞き取り記録</div>
-      <div class="item"><div class="no">1回目</div>
-        <div><div class="mini-lab">聞き取り日</div><input type="date" data-k="hd1"></div>
-        <div style="margin-top:9px"><div class="mini-lab">情報提供を受けた職種（氏名）</div><input type="text" data-k="hj1" placeholder="介護支援専門員（　　）"></div>
-        <div style="margin-top:9px"><div class="mini-lab">会議出席</div><div class="chips" data-single data-grp="ha1"><button class="chip no" data-v="無" style="min-height:38px">無</button><button class="chip" data-v="有" style="min-height:38px">有</button></div></div></div>
-      <div class="item"><div class="no">2回目</div>
-        <div><div class="mini-lab">聞き取り日</div><input type="date" data-k="hd2"></div>
-        <div style="margin-top:9px"><div class="mini-lab">情報提供を受けた職種（氏名）</div><input type="text" data-k="hj2"></div>
-        <div style="margin-top:9px"><div class="mini-lab">会議出席</div><div class="chips" data-single data-grp="ha2"><button class="chip no" data-v="無" style="min-height:38px">無</button><button class="chip" data-v="有" style="min-height:38px">有</button></div></div></div>
-      <div class="item"><div class="no">3回目</div>
-        <div><div class="mini-lab">聞き取り日</div><input type="date" data-k="hd3"></div>
-        <div style="margin-top:9px"><div class="mini-lab">情報提供を受けた職種（氏名）</div><input type="text" data-k="hj3"></div>
-        <div style="margin-top:9px"><div class="mini-lab">会議出席</div><div class="chips" data-single data-grp="ha3"><button class="chip no" data-v="無" style="min-height:38px">無</button><button class="chip" data-v="有" style="min-height:38px">有</button></div></div></div>
-      <div class="note"><b>※</b> 課題分析にあたっては、必要に応じて「課題整理総括表」の活用も考えられます。</div>
-    </div></div>
-  </div>
-</div>
-
-<div class="actionbar"><div class="inner">
-  <button class="btn btn-ghost" id="clearBtn">クリア</button>
-  <button class="btn btn-print" id="printBtn">印刷/PDF</button>
-  <button class="btn btn-excel" id="excelBtn">Excel出力</button>
-</div></div>
-<div class="toast" id="toast"></div>
-<div id="printArea"></div>
-
-<script id="origB64" type="text/plain">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</script>
-<script>
-document.addEventListener('click',function(e){
-  var chip=e.target.closest('.chip'); if(!chip)return;
-  var box=chip.closest('.chips');
-  if(box&&box.hasAttribute('data-single')){box.querySelectorAll('.chip').forEach(function(c){if(c!==chip)c.classList.remove('on');});}
-  chip.classList.toggle('on');
-});
-(function(){var d=new Date();document.getElementById('recDate').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
-
-function val(k){var e=document.querySelector('[data-k="'+k+'"]');return e?e.value.trim():'';}
-function selOne(g){var c=document.querySelector('[data-grp="'+g+'"] .chip.on');return c?c.dataset.v:null;}
-function selAll(g){return [].slice.call(document.querySelectorAll('[data-grp="'+g+'"] .chip.on')).map(function(c){return c.dataset.v;});}
-function jpDate(iso){if(!iso)return '';var p=iso.split('-');if(p.length<3)return '';var y=+p[0];return '令和'+(y-2018)+'年'+(+p[1])+'月'+(+p[2])+'日';}
-function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
-
-document.getElementById('clearBtn').addEventListener('click',function(){
-  if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
-  document.querySelectorAll('.chip.on').forEach(function(c){c.classList.remove('on');});
-  document.querySelectorAll('input[type=text],input[type=number],textarea').forEach(function(i){i.value='';});
-});
-
-function b64ToBuf(b64){var bin=atob(b64);var len=bin.length;var u=new Uint8Array(len);for(var i=0;i<len;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
-
-async function getFilledWorkbook(){
-  var b64=document.getElementById('origB64').textContent.trim();
-  var wb=new ExcelJS.Workbook();
-  await wb.xlsx.load(b64ToBuf(b64));
-  var ws=wb.worksheets[0];
-  fillWorksheet(ws);
-  return {wb:wb,ws:ws};
-}
-
-function fillWorksheet(ws){
-
-    function gs(a){var v=ws.getCell(a).value;return v==null?'':(''+v);}
-    function ss(a,v){ws.getCell(a).value=v;}
-    function setIf(a,v){if(v)ss(a,v);}
-    function mark(a,tokens){var s=gs(a);tokens.forEach(function(t){var i=s.indexOf(t);if(i<0)return;var j=i-1;while(j>=0&&'□☑'.indexOf(s[j])<0){if(s[j]!==' '&&s[j]!=='\u3000')break;j--;}if(j>=0&&s[j]==='□'){s=s.slice(0,j)+'☑'+s.slice(j+1);}});ss(a,s);}
-    function fillParen(a,value,occ){if(!value)return;var s=gs(a);var re=/[（(][\s\u3000]*[）)]/g;var m,arr=[];while((m=re.exec(s)))arr.push(m);if(occ<arr.length){var x=arr[occ];s=s.slice(0,x.index)+s[x.index]+value+s[x.index+x[0].length-1]+s.slice(x.index+x[0].length);ss(a,s);}}
-    function circle(a,ch){if(!ch)return;var s=gs(a);var i=s.indexOf(ch);if(i>=0)ss(a,s.slice(0,i)+'【'+ch+'】'+s.slice(i+ch.length));}
-
-    setIf('K2','記入日：　'+jpDate(document.getElementById('recDate').value));
-    setIf('D3',val('furigana'));
-    setIf('D4',val('name')?val('name')+'　様':'');
-    var sex=selOne('sex'); if(sex==='男')ss('G4','　【男】 ・ 女'); else if(sex==='女')ss('G4','　男 ・ 【女】');
-    setIf('H4',val('age')?val('age')+'歳':'');
-    var care=selOne('care');
-    if(care==='要支援'){mark('I4',['要支援']);fillParen('I4',val('careNum'),0);}
-    else if(care==='要介護'){ss('I4',gs('I4').replace('・ 要介護(','・ ☑要介護('));fillParen('I4',val('careNum'),1);}
-    else if(care==='申請中'){mark('I4',['申請中']);}
-    else if(care==='なし'){mark('I4',['なし']);}
-    if(selOne('kubun'))mark('I3',['要区分変更']);
-    if(val('admitDate')||val('dischargeDate'))ss('D5','・入院(所)日：'+jpDate(val('admitDate'))+'　　　・退院(所)予定日：'+jpDate(val('dischargeDate')));
-    setIf('D6',val('cause'));
-    if(val('facility')||val('ward')||val('room'))ss('D7','施設名：'+val('facility')+'　　　'+val('ward')+'棟　　'+val('room')+'室');
-    setIf('D8',val('medInst')?'医療機関名：'+val('medInst'):'');
-    if(selOne('medm'))mark('L8',[selOne('medm')]);
-    if(val('dis1')||val('dis2')||val('dis3'))ss('D9','➀ '+val('dis1')+'　　➁ '+val('dis2')+'　　③ '+val('dis3'));
-    fillParen('K9',val('stableNo'),0);fillParen('K9',val('unstableNo'),1);
-    mark('D11',selAll('move'));fillParen('D11',val('moveOther'),0);
-    mark('D12',selAll('exc'));fillParen('D12',val('cathPouch'),0);
-    mark('D13',selAll('bath'));
-    mark('D14',selAll('food'));fillParen('D14',val('foodOther'),0);
-    setIf('N14',val('udf'));
-    mark('D15',selAll('swal'));circle('D15',selOne('swalf'));
-    mark('I15',selAll('dent'));circle('I15',selOne('dentt'));
-    mark('D16',selAll('oc'));
-    mark('I16',selAll('ou'));
-    mark('D17',selAll('ocare'));
-    mark('D18',selAll('sleep'));fillParen('D18',val('sleepBad'),0);
-    if(selOne('sm'))mark('L18',[selOne('sm')]);
-    mark('D19',selAll('cog'));fillParen('D19',val('cogOther'),0);
-    setIf('D21',val('hnUketome'));
-    if(selOne('tn'))mark('D20',[selOne('tn')]);
-    setIf('D23',val('hnIko'));setIf('D25',val('kzUketome'));setIf('D27',val('kzIko'));
-    if(selOne('mpn'))mark('D31',['なし']);
-    var mp=selAll('mp');['D32','D33','D34'].forEach(function(c){mark(c,mp);});
-    fillParen('D34',val('injectOther'),0);fillParen('D34',val('mpOther'),1);
-    if(selOne('nn'))mark('D35',['なし']);
-    var nur=selAll('nur');['D36','D37','D38','D39'].forEach(function(c){mark(c,nur);});
-    fillParen('D39',val('nurOther'),0);
-    if(selOne('rn'))mark('D40',['なし']);
-    var reha=selAll('reha');['D41','D42','D43','D44','D45'].forEach(function(c){mark(c,reha);});
-    fillParen('D45',val('rehaOther'),0);
-    if(selOne('kinki'))mark('D47',[selOne('kinki')]);
-    setIf('G47',val('kinkiNaiyou'));
-    setIf('D48',val('yogo'));setIf('D51',val('youken'));
-    setIf('C53',jpDate(val('hd1')));setIf('D53',val('hj1'));if(selOne('ha1'))circle('N53',selOne('ha1'));
-    setIf('C54',jpDate(val('hd2')));setIf('D54',val('hj2'));if(selOne('ha2'))circle('N54',selOne('ha2'));
-    setIf('C55',jpDate(val('hd3')));setIf('D55',val('hj3'));if(selOne('ha3'))circle('N55',selOne('ha3'));
-
-}
-
-/* ===== 印刷用テーブル生成（Excel様式の再現） ===== */
-function colLettersToNum(s){var n=0;for(var i=0;i<s.length;i++)n=n*26+(s.charCodeAt(i)-64);return n;}
-function addrToRC(a){var m=/^\$?([A-Z]+)\$?(\d+)$/.exec(a);return m?{c:colLettersToNum(m[1]),r:parseInt(m[2],10)}:null;}
-function escHtml(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function cellText(cell){
-  var v=cell.value;
-  if(v==null)return '';
-  if(typeof v==='object'){
-    if(v.richText)return v.richText.map(function(t){return t.text;}).join('');
-    if(typeof v.getTime==='function')return v.toLocaleDateString('ja-JP');
-    if(v.text!=null)return ''+v.text;
-    if(v.result!=null)return ''+v.result;
-    if(v.formula!=null)return '';
-    return '';
-  }
-  return ''+v;
-}
-function borderCss(b){
-  if(!b||!b.style)return 'none';
-  switch(b.style){
-    case 'medium':return '1.5px solid #000';
-    case 'thin':return '0.75px solid #000';
-    case 'thick':return '2.2px solid #000';
-    case 'double':return '3px double #000';
-    case 'dashed':return '1px dashed #000';
-    case 'dotted':return '1px dotted #000';
-    case 'hair':return '0.5px solid #000';
-    default:return '0.75px solid #000';
-  }
-}
-// Excelのフォント名をWeb用のfont-familyスタックへ（属性値が "" 区切りのため単引用符を使用）
-function fontFamily(name){
-  if(!name)return '';
-  var stack=["'"+name+"'"];
-  if(/Meiryo/i.test(name))stack.push("'Meiryo UI'","Meiryo");
-  if(/游ゴシック|Yu ?Gothic/i.test(name))stack.push("'Yu Gothic'","'游ゴシック'");
-  if(/ゴシック|PGothic|Ｐゴシック/i.test(name))stack.push("'MS PGothic'","'ＭＳ Ｐゴシック'");
-  stack.push("'Noto Sans JP'","sans-serif");
-  return stack.join(',');
-}
-function renderPrint(ws){
-  var c, r;
-  // 印刷範囲（pageSetup.printArea 例:"A1:N56"）に従う。無ければシート使用範囲。
-  var minR=1,minC=1,maxRow=ws.rowCount||1,maxCol=ws.columnCount||1,fixedRange=false;
-  var par=ws.pageSetup&&ws.pageSetup.printArea;
-  if(par&&typeof par==='string'){
-    var pr0=par.split(':'),pa0=addrToRC(pr0[0]),pb0=addrToRC(pr0[1]||pr0[0]);
-    if(pa0&&pb0){minR=Math.min(pa0.r,pb0.r);minC=Math.min(pa0.c,pb0.c);maxRow=Math.max(pa0.r,pb0.r);maxCol=Math.max(pa0.c,pb0.c);fixedRange=true;}
-  }
-  // 結合セル（merges）を把握（印刷範囲でクランプ）
-  var spanMap={}, covered={};
-  var mraw=(ws.model&&ws.model.merges)||[];
-  if(!Array.isArray(mraw))mraw=Object.keys(mraw).map(function(k){return mraw[k];});
-  mraw.forEach(function(rng){
-    if(typeof rng!=='string')return;
-    var p=rng.split(':');if(p.length<2)return;
-    var a=addrToRC(p[0]),b=addrToRC(p[1]);if(!a||!b)return;
-    var r1=Math.min(a.r,b.r),r2=Math.max(a.r,b.r),c1=Math.min(a.c,b.c),c2=Math.max(a.c,b.c);
-    if(r1>maxRow||c1>maxCol||r2<minR||c2<minC)return;
-    if(fixedRange){if(r2>maxRow)r2=maxRow;if(c2>maxCol)c2=maxCol;}
-    else{if(r2>maxRow)maxRow=r2;if(c2>maxCol)maxCol=c2;}
-    spanMap[r1+'_'+c1]={rs:r2-r1+1,cs:c2-c1+1};
-    for(var rr=r1;rr<=r2;rr++)for(var cc=c1;cc<=c2;cc++){if(rr!==r1||cc!==c1)covered[rr+'_'+cc]=true;}
-  });
-  // 列幅・行高はExcel実寸(px)で算出（均等縮小は .xl-scale 側で吸収するため正規化しない）
-  var defColW=(ws.properties&&ws.properties.defaultColWidth)||8.43;
-  var defRowH=(ws.properties&&ws.properties.defaultRowHeight)||16.5;
-  var colHtml='',colTotal=0;
-  for(c=minC;c<=maxCol;c++){var w=ws.getColumn(c).width;if(!w||w<=0)w=defColW;var cpx=Math.round(w*7)+5;colTotal+=cpx;colHtml+='<col style="width:'+cpx+'px">';}
-  var rowsHtml='';
-  for(r=minR;r<=maxRow;r++){
-    var rh=ws.getRow(r).height;
-    var hpx=(rh||defRowH)*96/72;
-    rowsHtml+='<tr style="height:'+hpx.toFixed(1)+'px">';
-    for(c=minC;c<=maxCol;c++){
-      if(covered[r+'_'+c])continue;
-      var cell=ws.getCell(r,c);
-      var sp=spanMap[r+'_'+c];
-      var rs=sp?sp.rs:1, cs=sp?sp.cs:1;
-      var attr='';
-      if(sp){if(sp.rs>1)attr+=' rowspan="'+sp.rs+'"';if(sp.cs>1)attr+=' colspan="'+sp.cs+'"';}
-      var bd=cell.border||{},al=cell.alignment||{},f=cell.font||{};
-      var st=[];
-      // 結合セルの下/右罫線はExcelでは結合範囲の最終行/最終列のセルに設定されるため、そこから読む
-      var bBottom=(rs>1?(ws.getCell(r+rs-1,c).border||{}):bd).bottom;
-      var bRight=(cs>1?(ws.getCell(r,c+cs-1).border||{}):bd).right;
-      st.push('border-top:'+borderCss(bd.top));
-      st.push('border-bottom:'+borderCss(bBottom));
-      st.push('border-left:'+borderCss(bd.left));
-      st.push('border-right:'+borderCss(bRight));
-      var ha=al.horizontal;
-      st.push('text-align:'+(ha==='center'||ha==='centerContinuous'?'center':ha==='right'?'right':'left'));
-      var va=al.vertical;
-      st.push('vertical-align:'+(va==='middle'?'middle':va==='bottom'?'bottom':'top'));
-      var isVert=al.textRotation==='vertical'||al.textRotation===90||al.textRotation===255;
-      if(isVert){st.push('writing-mode:vertical-rl');st.push('text-orientation:upright');st.push('white-space:nowrap');}
-      else if(al.wrapText){st.push('white-space:normal');}
-      else{
-        // 横書き・折り返しなし：Excel同様、隣の空セルへはみ出して全文表示（クリップしない）
-        st.push('white-space:nowrap');st.push('overflow:visible');st.push('position:relative');st.push('z-index:1');
-      }
-      if(f.name)st.push('font-family:'+fontFamily(f.name));
-      if(f.bold)st.push('font-weight:700');
-      var fs=(f.size||11)*96/72;if(fs<6)fs=6;
-      st.push('font-size:'+fs.toFixed(1)+'px');
-      var fl=cell.fill;
-      if(fl&&fl.type==='pattern'&&fl.pattern&&fl.pattern!=='none'&&fl.fgColor&&fl.fgColor.argb){
-        var argb=fl.fgColor.argb;if(argb.length===8)st.push('background:#'+argb.slice(2));
-      }
-      var txt=escHtml(cellText(cell)).replace(/\r?\n/g,'<br>');
-      rowsHtml+='<td'+attr+' style="'+st.join(';')+'">'+txt+'</td>';
-    }
-    rowsHtml+='</tr>';
-  }
-  var tableHtml='<table class="xl-table" style="width:'+colTotal+'px"><colgroup>'+colHtml+'</colgroup><tbody>'+rowsHtml+'</tbody></table>';
-  var pa=document.getElementById('printArea');
-  pa.removeAttribute('style');
-  pa.innerHTML='<div class="xl-scale">'+tableHtml+'</div>';
-  // 実寸を計測（画面外に一時表示、スケール解除状態）
-  pa.style.cssText='position:fixed;left:-10000px;top:0;display:block;visibility:hidden';
-  var scaleEl=pa.firstElementChild, tbl=scaleEl.firstElementChild;
-  var natW=tbl.offsetWidth||1041, natH=tbl.offsetHeight||1447;
-  // A4縦の印刷可能領域(@page margin 6mm時) ≈742×1066px。均等縮小（歪ませない）
-  var availW=742, availH=1066;
-  var s=Math.min(availW/natW, availH/natH);
-  scaleEl.style.cssText='transform-origin:top left;transform:scale('+s+');width:'+natW+'px;height:'+natH+'px';
-  // フロー上の占有サイズを印刷領域サイズにして1ページに収める
-  pa.removeAttribute('style');
-  pa.style.cssText='width:'+availW+'px;height:'+availH+'px;overflow:hidden;margin:0 auto';
-}
-
-document.getElementById('printBtn').addEventListener('click',async function(){
-  if(typeof ExcelJS==='undefined'){window.print();return;}
-  var btn=this;btn.disabled=true;var lbl=btn.textContent;btn.textContent='準備中…';
-  try{
-    var r=await getFilledWorkbook();
-    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready;}catch(e){}}
-    renderPrint(r.ws);
-    btn.disabled=false;btn.textContent=lbl;
-    setTimeout(function(){window.print();},80);
-  }catch(err){console.error(err);toast('印刷準備エラー: '+err.message);btn.disabled=false;btn.textContent=lbl;}
-});
-
-document.getElementById('excelBtn').addEventListener('click',async function(){
-  var btn=this;
-  if(typeof ExcelJS==='undefined'){toast('Excel機能を読み込めませんでした（通信環境をご確認ください）');return;}
-  btn.disabled=true;var lbl=btn.textContent;btn.textContent='出力中…';
-  try{
-    var r=await getFilledWorkbook();
-    var buf=await r.wb.xlsx.writeBuffer();
-    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    var nm=(val('name')||'退院退所情報記録書').replace(/[\/:*?"<>|　 ]/g,'')+'_記入済.xlsx';
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm;document.body.appendChild(a);a.click();
-    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
-    toast('Excelを書き出しました：'+nm);
-  }catch(err){console.error(err);toast('出力エラー: '+err.message);}
-  finally{btn.disabled=false;btn.textContent=lbl;}
-});
-</script>
+  <div class="foot">ケアマネ業務支援</div>
 </body>
 </html>

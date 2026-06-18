@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ジェノグラム・エコマップ作成</title>
+<style>
+  :root{
+    --bg:#eef1f5; --panel:#ffffff; --header:#34507c; --header2:#3d5d90;
+    --accent:#2f6db0; --accent-soft:#e8f0f9; --ink:#1a1a1a; --muted:#5b6675;
+    --border:#d3dae3; --line:#e3e8ef; --danger:#c0392b; --ok:#2e7d57;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:"Meiryo UI","Yu Gothic UI","Hiragino Kaku Gothic ProN","MS PGothic",sans-serif;
+    color:var(--ink);background:var(--bg);overflow:hidden;
+    display:flex;flex-direction:column;height:100vh;
+  }
+  /* ---------- Header / toolbar ---------- */
+  header{
+    background:linear-gradient(var(--header2),var(--header));
+    color:#fff;display:flex;align-items:center;gap:14px;
+    padding:7px 12px;flex:0 0 auto;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:30;
+  }
+  .brand{font-weight:700;font-size:15px;letter-spacing:.5px;white-space:nowrap;display:flex;align-items:center;gap:7px;}
+  .brand svg{display:block;}
+  .backlink{
+    display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+    color:#fff;text-decoration:none;border-radius:7px;padding:6px 10px;font-size:12.5px;
+  }
+  .backlink:hover{background:rgba(255,255,255,.28);}
+  .toolbar{display:flex;gap:6px;flex-wrap:wrap;}
+  .tbtn{
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+    color:#fff;border-radius:7px;padding:6px 11px;font-size:12.5px;cursor:pointer;
+    display:flex;align-items:center;gap:6px;font-family:inherit;transition:background .12s;white-space:nowrap;
+  }
+  .tbtn:hover{background:rgba(255,255,255,.24);}
+  .tbtn:active{background:rgba(255,255,255,.34);}
+  .tbtn svg{width:15px;height:15px;}
+
+  /* ---------- Layout ---------- */
+  .main{flex:1 1 auto;display:flex;min-height:0;}
+  .palette{
+    flex:0 0 168px;background:var(--panel);border-right:1px solid var(--border);
+    overflow-y:auto;padding:8px;
+  }
+  .stage-wrap{flex:1 1 auto;position:relative;min-width:0;}
+  .inspector{
+    flex:0 0 220px;background:var(--panel);border-left:1px solid var(--border);
+    overflow-y:auto;padding:12px;
+  }
+
+  /* ---------- Palette ---------- */
+  .sec-title{
+    font-size:12px;font-weight:700;color:var(--accent);margin:10px 2px 6px;
+    padding-bottom:3px;border-bottom:2px solid var(--accent-soft);display:flex;align-items:center;gap:5px;
+  }
+  .sec-title:first-child{margin-top:2px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .pal-item{
+    background:#fbfcfe;border:1px solid var(--border);border-radius:7px;
+    aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;transition:all .1s;padding:2px;
+  }
+  .pal-item:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .pal-item:active{transform:scale(.94);}
+  .pal-item svg{width:100%;height:auto;max-height:34px;}
+  .pal-item .cap{font-size:9px;color:var(--muted);margin-top:2px;line-height:1;text-align:center;}
+  .line-list{display:flex;flex-direction:column;gap:5px;}
+  .line-item{
+    display:flex;align-items:center;gap:8px;background:#fbfcfe;border:1px solid var(--border);
+    border-radius:7px;padding:6px 8px;cursor:pointer;transition:all .1s;
+  }
+  .line-item:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .line-item.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset;}
+  .line-item svg{flex:0 0 46px;height:18px;}
+  .line-item .cap{font-size:11px;color:#333;}
+
+  /* ---------- Stage ---------- */
+  #stage{width:100%;height:100%;display:block;background:#fff;touch-action:none;cursor:default;}
+  #stage.panning{cursor:grabbing;}
+  #stage.connecting{cursor:crosshair;}
+  .float-controls{
+    position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:10;
+  }
+  .zbtn{
+    width:38px;height:38px;border-radius:9px;border:1px solid var(--border);background:#fff;
+    font-size:18px;color:#333;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 1px 3px rgba(0,0,0,.12);font-family:inherit;
+  }
+  .zbtn:hover{background:var(--accent-soft);border-color:var(--accent);}
+  .zbtn svg{width:18px;height:18px;}
+  .trash{
+    position:absolute;right:14px;bottom:14px;width:52px;height:52px;border-radius:12px;
+    background:#fff;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;
+    color:var(--muted);z-index:10;transition:all .12s;box-shadow:0 1px 3px rgba(0,0,0,.1);
+  }
+  .trash.hot{border-color:var(--danger);background:#fdecea;color:var(--danger);transform:scale(1.12);}
+  .hint{
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    background:rgba(33,49,77,.92);color:#fff;font-size:12px;padding:6px 14px;border-radius:20px;
+    z-index:12;pointer-events:none;opacity:0;transition:opacity .18s;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.2);
+  }
+  .hint.show{opacity:1;}
+  .house-bar{
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    background:#fff;border:1px solid var(--border);border-radius:22px;
+    padding:6px 8px 6px 16px;display:none;align-items:center;gap:10px;z-index:14;
+    box-shadow:0 3px 12px rgba(0,0,0,.18);font-size:12.5px;color:#333;
+  }
+  .house-bar.show{display:flex;}
+  .house-bar button{border:none;border-radius:16px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;}
+  .hb-ok{background:#d98324;color:#fff;}
+  .hb-ok:hover{background:#c2731f;}
+  .hb-cancel{background:#eef1f5;color:#555;}
+  .hb-cancel:hover{background:#e2e7ee;}
+
+  /* ---------- Inspector ---------- */
+  .insp-title{font-size:12px;font-weight:700;color:var(--accent);margin:0 0 10px;}
+  .insp-empty{font-size:12px;color:var(--muted);line-height:1.7;}
+  .field{margin-bottom:11px;}
+  .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;}
+  .field input[type=text], .field textarea, .field select{
+    width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 8px;font-size:13px;
+    font-family:inherit;color:var(--ink);background:#fff;
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
+  .checks{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+  .checks label{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#333;cursor:pointer;}
+  .checks input{width:16px;height:16px;accent-color:var(--accent);}
+  .insp-del{
+    width:100%;background:#fff;border:1px solid var(--danger);color:var(--danger);
+    border-radius:7px;padding:8px;font-size:12.5px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .insp-del:hover{background:#fdecea;}
+  .legend{font-size:11px;color:var(--muted);line-height:1.8;margin-top:6px;}
+  .legend b{color:#333;}
+
+  /* ---------- Settings popover ---------- */
+  .pop{
+    position:absolute;top:48px;right:12px;background:#fff;border:1px solid var(--border);
+    border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);padding:12px 14px;z-index:40;display:none;min-width:200px;
+  }
+  .pop.show{display:block;}
+  .pop h4{margin:0 0 9px;font-size:12.5px;color:var(--accent);}
+  .pop label{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:8px;cursor:pointer;color:#333;}
+  .pop input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);}
+
+  /* ---------- mobile ---------- */
+  @media (max-width:780px){
+    .inspector{position:absolute;right:0;top:0;height:100%;z-index:25;box-shadow:-3px 0 12px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .2s;}
+    .inspector.open{transform:translateX(0);}
+    .palette{flex-basis:138px;}
+  }
+
+  /* ---------- print ---------- */
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea,#printArea *{visibility:visible;}
+    #printArea{display:block;position:fixed;inset:0;background:#fff;padding:8mm;}
+    @page{size:A4 landscape;margin:8mm;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="backlink" href="index.html" title="ホームに戻る">←&nbsp;ホーム</a>
+  <div class="brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><circle cx="7" cy="7" r="3.2"/><rect x="14" y="4" width="6" height="6"/><line x1="7" y1="10.2" x2="7" y2="18"/><line x1="17" y1="10" x2="17" y2="14"/><path d="M4 18h6M14 18h6" stroke-dasharray="2 2"/></svg>
+    ジェノグラム・エコマップ作成
+  </div>
+  <div class="toolbar">
+    <button class="tbtn" id="btnNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z"/></svg>新規</button>
+    <button class="tbtn" id="btnOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>開く</button>
+    <button class="tbtn" id="btnSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>保存</button>
+    <button class="tbtn" id="btnPng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5L5 20"/></svg>画像保存</button>
+    <button class="tbtn" id="btnPrint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>印刷</button>
+    <button class="tbtn" id="btnSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.2-1.3L14 1h-4l-.3 2.4a7 7 0 0 0-2.2 1.3l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.3l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.2 1.3L10 23h4l.3-2.4a7 7 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/></svg>設定</button>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Palette -->
+  <aside class="palette" id="palette"></aside>
+
+  <!-- Stage -->
+  <div class="stage-wrap">
+    <svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="hint" id="hint"></div>
+    <div class="house-bar" id="houseBar">
+      <span id="houseBarLabel">同居する人をクリックで選択</span>
+      <button class="hb-ok" id="houseOk">確定</button>
+      <button class="hb-cancel" id="houseCancel">取消</button>
+    </div>
+    <div class="float-controls">
+      <button class="zbtn" id="zoomIn" title="拡大">＋</button>
+      <button class="zbtn" id="zoomOut" title="縮小">－</button>
+      <button class="zbtn" id="zoomFit" title="全体表示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+    <div class="trash" id="trash" title="ここにドラッグで削除"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+    <div class="pop" id="settingsPop">
+      <h4>表示設定</h4>
+      <label><input type="checkbox" id="optGrid" checked> グリッドを表示</label>
+      <label><input type="checkbox" id="optSnap" checked> グリッドに吸着</label>
+    </div>
+  </div>
+
+  <!-- Inspector -->
+  <aside class="inspector" id="inspector">
+    <div id="inspContent"></div>
+  </aside>
+</div>
+
+<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+<div id="printArea"></div>
+
+<script>
+"use strict";
+(function(){
+  // ===================== State =====================
+  const GRID = 20;
+  const state = { nodes:[], edges:[], texts:[], households:[], seq:1 };
+  let view = { tx:0, ty:0, s:1 };
+  let opt = { grid:true, snap:true };
+  let selected = null;          // {kind:'node'|'edge'|'text'|'house', id}
+  let lineTool = null;          // active relationship line type
+  let connectFrom = null;       // node id when connecting
+  let houseMode = null;         // {target:'new'|houseId, members:Set} when picking household members
+
+  const stage = document.getElementById('stage');
+  const SVGNS = "http://www.w3.org/2000/svg";
+
+  // ===================== Definitions =====================
+  // person shapes: type, optional deceased/index/filled. radius for edge trimming.
+  const NODE_RADIUS = { male:30, female:28, unknown:30, pregnancy:28, resource:0 };
+
+  const PERSON = [
+    {label:'女性',     opts:{type:'female'}},
+    {label:'男性',     opts:{type:'male'}},
+    {label:'不明',     opts:{type:'unknown'}},
+    {label:'妊娠',     opts:{type:'pregnancy'}},
+    {label:'本人(女)', opts:{type:'female', index:true}},
+    {label:'本人(男)', opts:{type:'male',   index:true}},
+    {label:'死亡(女)', opts:{type:'female', deceased:true}},
+    {label:'死亡(男)', opts:{type:'male',   deceased:true}},
+    {label:'塗り(女)', opts:{type:'female', filled:true}},
+  ];
+
+  const ECO = [
+    {label:'本人/世帯', opts:{type:'resource', label:'本人', big:true}},
+    {label:'病院',      opts:{type:'resource', label:'病院'}},
+    {label:'デイ',      opts:{type:'resource', label:'デイサービス'}},
+    {label:'家族',      opts:{type:'resource', label:'家族'}},
+    {label:'友人',      opts:{type:'resource', label:'友人'}},
+    {label:'近所',      opts:{type:'resource', label:'近所'}},
+    {label:'職場',      opts:{type:'resource', label:'職場'}},
+    {label:'行政',      opts:{type:'resource', label:'行政'}},
+    {label:'リソース',  opts:{type:'resource', label:'　'}},
+  ];
+
+  const GENO_LINES = [
+    {type:'marriage',   label:'婚姻'},
+    {type:'divorce',    label:'離婚'},
+    {type:'separation', label:'別居'},
+    {type:'cohabit',    label:'同居・内縁'},
+    {type:'child',      label:'親子'},
+  ];
+  const ECO_LINES = [
+    {type:'strong',  label:'強い関係'},
+    {type:'normal',  label:'普通の関係'},
+    {type:'weak',    label:'希薄な関係'},
+    {type:'conflict',label:'葛藤・ストレス'},
+    {type:'arrow1',  label:'関わり（一方向）'},
+    {type:'arrow2',  label:'関わり（双方向）'},
+  ];
+
+  // ===================== Helpers =====================
+  const uid = () => 'i' + (state.seq++);
+  const nodeById = id => state.nodes.find(n=>n.id===id);
+  const snap = v => opt.snap ? Math.round(v/GRID)*GRID : v;
+
+  function resourceSize(n){
+    const text = (n.label||'').trim() || '　';
+    const w = Math.max(72, text.length*16 + 30);
+    const h = n.big ? 56 : 48;
+    return { rx:(n.big? Math.max(48,w/2):w/2), ry:h/2 };
+  }
+  function nodeRadius(n){
+    if(n.type==='resource'){ const s=resourceSize(n); return (s.rx+s.ry)/2; }
+    return NODE_RADIUS[n.type] || 28;
+  }
+
+  // ===================== Shape drawing (SVG string, centered at 0,0) =====================
+  function shapeMarkup(n, scale){
+    scale = scale || 1;
+    const ink = '#1a1a1a';
+    const fill = n.filled ? ink : '#fff';
+    const sw = 2*scale;
+    let s = '';
+    const R = 26*scale;       // base radius
+    if(n.type==='female'){
+      s += `<circle cx="0" cy="0" r="${R}" fill="${fill}" stroke="${ink}" stroke-width="${sw}"/>`;
+      if(n.index) s += `<circle cx="0" cy="0" r="${R-4*scale}" fill="none" stroke="${ink}" stroke-width="${sw}"/>`;
+    } else if(n.type==='male'){
+      const a=R*1.06;
+      s += `<rect x="${-a}" y="${-a}" width="${a*2}" height="${a*2}" fill="${fill}" stroke="${ink}" stroke-width="${sw}"/>`;
+      if(n.index){ const b=a-4*scale; s += `<rect x="${-b}" y="${-b}" width="${b*2}" height="${b*2}" fill="none" stroke="${ink}" stroke-width="${sw}"/>`; }
+    } else if(n.type==='unknown'){
+      const a=R*1.18;
+      s += `<polygon points="0,${-a} ${a},0 0,${a} ${-a},0" fill="${fill}" stroke="${ink}" stroke-width="${sw}"/>`;
+      if(n.index){ const b=a-5*scale; s += `<polygon points="0,${-b} ${b},0 0,${b} ${-b},0" fill="none" stroke="${ink}" stroke-width="${sw}"/>`; }
+    } else if(n.type==='pregnancy'){
+      const a=R*1.14;
+      s += `<polygon points="0,${-a} ${a*0.92},${a*0.72} ${-a*0.92},${a*0.72}" fill="${fill}" stroke="${ink}" stroke-width="${sw}"/>`;
+    } else if(n.type==='resource'){
+      const sz=resourceSize(n);
+      s += `<ellipse cx="0" cy="0" rx="${sz.rx*scale}" ry="${sz.ry*scale}" fill="#fff" stroke="${ink}" stroke-width="${(n.big?2.4:1.8)*scale}"/>`;
+    }
+    if(n.deceased){
+      const d=R*1.18;
+      s += `<line x1="${-d}" y1="${-d}" x2="${d}" y2="${d}" stroke="${ink}" stroke-width="${sw}"/>`;
+      s += `<line x1="${-d}" y1="${d}" x2="${d}" y2="${-d}" stroke="${ink}" stroke-width="${sw}"/>`;
+    }
+    return s;
+  }
+
+  // ===================== Render =====================
+  function defsMarkup(){
+    return `<defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+      </marker>
+      <pattern id="grid" width="${GRID}" height="${GRID}" patternUnits="userSpaceOnUse">
+        <path d="M ${GRID} 0 L 0 0 0 ${GRID}" fill="none" stroke="#e6eaf1" stroke-width="1"/>
+      </pattern>
+    </defs>`;
+  }
+
+  function nodeSVG(n){
+    const labelFill = '#1a1a1a';
+    let inner = shapeMarkup(n);
+    // labels
+    if(n.type==='resource'){
+      const sz=resourceSize(n);
+      const fs = n.big?16:14;
+      inner += `<text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="${fs}" font-weight="${n.big?700:500}" fill="${labelFill}" style="pointer-events:none">${esc(n.label||'')}</text>`;
+    } else {
+      const name=(n.label||'').trim();
+      const age=(n.sub||'').trim();
+      if(age) inner += `<text x="0" y="5" text-anchor="middle" font-size="14" fill="${labelFill}" style="pointer-events:none">${esc(age)}</text>`;
+      if(name) inner += `<text x="0" y="46" text-anchor="middle" font-size="13" fill="${labelFill}" style="pointer-events:none">${esc(name)}</text>`;
+    }
+    const sel = (selected && selected.kind==='node' && selected.id===n.id);
+    const halo = sel ? `<circle cx="0" cy="0" r="${nodeRadius(n)+8}" fill="none" stroke="#2f6db0" stroke-width="2" stroke-dasharray="4 3"/>` : '';
+    const conn = (connectFrom===n.id) ? `<circle cx="0" cy="0" r="${nodeRadius(n)+6}" fill="none" stroke="#2e7d57" stroke-width="2.5"/>` : '';
+    const pick = (houseMode && houseMode.members.has(n.id)) ? `<circle cx="0" cy="0" r="${nodeRadius(n)+9}" fill="none" stroke="#d98324" stroke-width="3"/>` : '';
+    return `<g class="node" data-node="${n.id}" transform="translate(${n.x},${n.y})">${halo}${conn}${pick}${inner}</g>`;
+  }
+
+  function edgeGeom(e){
+    const a=nodeById(e.from), b=nodeById(e.to);
+    if(!a||!b) return null;
+    let dx=b.x-a.x, dy=b.y-a.y; let len=Math.hypot(dx,dy)||1;
+    const ux=dx/len, uy=dy/len;
+    const ra=nodeRadius(a), rb=nodeRadius(b);
+    const p1={x:a.x+ux*ra, y:a.y+uy*ra};
+    const p2={x:b.x-ux*rb, y:b.y-uy*rb};
+    return {p1,p2,ux,uy};
+  }
+
+  // edge categories
+  const PARTNER = new Set(['marriage','divorce','separation','cohabit']);
+  const CHILDT  = new Set(['child']);
+
+  function ecoEdgeSVG(e){
+    const g=edgeGeom(e); if(!g) return '';
+    const {p1,p2,ux,uy}=g;
+    const ink='#1a1a1a';
+    const sel=(selected&&selected.kind==='edge'&&selected.id===e.id);
+    let attrs=`stroke="${ink}" fill="none" stroke-linecap="round"`;
+    let extra='';
+    switch(e.type){
+      case 'marriage': case 'child': attrs+=` stroke-width="2"`; break;
+      case 'cohabit': attrs+=` stroke-width="2" stroke-dasharray="8 5"`; break;
+      case 'strong': attrs+=` stroke-width="4.5"`; break;
+      case 'normal': attrs+=` stroke-width="2"`; break;
+      case 'weak': attrs+=` stroke-width="2" stroke-dasharray="2 5"`; break;
+      case 'conflict': attrs+=` stroke-width="2"`; extra=hatchMarks(p1,p2,ux,uy); break;
+      case 'arrow1': attrs+=` stroke-width="2" marker-end="url(#arrow)"`; break;
+      case 'arrow2': attrs+=` stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"`; break;
+      case 'divorce': attrs+=` stroke-width="2"`; extra=slashMarks(p1,p2,ux,uy,2); break;
+      case 'separation': attrs+=` stroke-width="2"`; extra=slashMarks(p1,p2,ux,uy,1); break;
+      default: attrs+=` stroke-width="2"`;
+    }
+    const line=`<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" ${attrs}/>`;
+    const hit=`<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="transparent" stroke-width="14" fill="none"/>`;
+    const halo = sel ? `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#2f6db0" stroke-width="8" opacity="0.28"/>` : '';
+    return `<g class="edge" data-edge="${e.id}">${halo}${line}${extra}${hit}</g>`;
+  }
+
+  function slashMarks(p1,p2,ux,uy,count){
+    const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+    // slash direction = line dir rotated 45deg
+    const c=Math.cos(Math.PI/4), s=Math.sin(Math.PI/4);
+    const sx=ux*c-uy*s, sy=ux*s+uy*c;
+    const L=9;
+    let out='';
+    const offs = count===2 ? [-5,5] : [0];
+    offs.forEach(o=>{
+      const cx=mx+ux*o, cy=my+uy*o;
+      out+=`<line x1="${cx-sx*L}" y1="${cy-sy*L}" x2="${cx+sx*L}" y2="${cy+sy*L}" stroke="#1a1a1a" stroke-width="2"/>`;
+    });
+    return out;
+  }
+  function hatchMarks(p1,p2,ux,uy){
+    const len=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+    const c=Math.cos(Math.PI/4), s=Math.sin(Math.PI/4);
+    const sx=ux*c-uy*s, sy=ux*s+uy*c; const L=7;
+    const step=14; let out='';
+    for(let d=step; d<len-4; d+=step){
+      const cx=p1.x+ux*d, cy=p1.y+uy*d;
+      out+=`<line x1="${cx-sx*L}" y1="${cy-sy*L}" x2="${cx+sx*L}" y2="${cy+sy*L}" stroke="#1a1a1a" stroke-width="1.6"/>`;
+    }
+    return out;
+  }
+
+  // ---- Genogram orthogonal links (partner line + sibling-bar children) ----
+  const seg = (x1,y1,x2,y2,w)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1a1a1a" stroke-width="${w||2}" fill="none"/>`;
+
+  function partnerEdgeOf(nodeId){
+    return state.edges.find(e=>PARTNER.has(e.type)&&(e.from===nodeId||e.to===nodeId));
+  }
+  function coupleAnchor(e){
+    const a=nodeById(e.from), b=nodeById(e.to);
+    return { x:(a.x+b.x)/2, y:(a.y+b.y)/2 };
+  }
+
+  // Horizontal partner line between two spouses (drawn under nodes; node fill hides interior)
+  function partnerSVG(e){
+    const a=nodeById(e.from), b=nodeById(e.to); if(!a||!b) return '';
+    const yL=(a.y+b.y)/2;
+    const left=Math.min(a.x,b.x), right=Math.max(a.x,b.x);
+    const anchor={x:(a.x+b.x)/2, y:yL};
+    const sel=(selected&&selected.kind==='edge'&&selected.id===e.id);
+    const dash = e.type==='cohabit' ? ' stroke-dasharray="8 5"' : '';
+    const d=`M ${a.x} ${a.y} V ${yL} H ${b.x} V ${b.y}`;
+    let extra='';
+    if(e.type==='divorce')    extra=slashMarks(anchor,anchor,1,0,2);
+    if(e.type==='separation') extra=slashMarks(anchor,anchor,1,0,1);
+    const halo = sel ? `<path d="${d}" fill="none" stroke="#2f6db0" stroke-width="8" opacity="0.28"/>` : '';
+    const hit  = `<line x1="${left}" y1="${yL}" x2="${right}" y2="${yL}" stroke="transparent" stroke-width="16" fill="none"/>`;
+    return `<g class="edge" data-edge="${e.id}">${halo}<path d="${d}" fill="none" stroke="#1a1a1a" stroke-width="2"${dash}/>${extra}${hit}</g>`;
+  }
+
+  // Group child edges into families and draw drop + sibling bar + child stems
+  function familiesSVG(){
+    const fam={};
+    state.edges.forEach(e=>{
+      if(!CHILDT.has(e.type)) return;
+      const parent=nodeById(e.from), child=nodeById(e.to);
+      if(!parent||!child) return;
+      const pe=partnerEdgeOf(parent.id);
+      let key, anchor;
+      if(pe && (pe.type==='marriage' || pe.type==='cohabit')){
+        const otherId = pe.from===parent.id ? pe.to : pe.from;
+        key='c:'+[parent.id,otherId].sort().join('-');
+        anchor=coupleAnchor(pe);
+      } else {
+        // single parent, or divorced/separated -> drop from under this parent
+        key='s:'+parent.id;
+        anchor={ x:parent.x, y:parent.y+nodeRadius(parent) };
+      }
+      (fam[key]||(fam[key]={anchor,items:[]})).items.push({child,edge:e});
+    });
+    let out='';
+    Object.values(fam).forEach(f=>{
+      const a=f.anchor;
+      const tops=f.items.map(it=>it.child.y-nodeRadius(it.child));
+      const minTop=Math.min.apply(null,tops);
+      let barY = minTop - 26;
+      if(barY < a.y+16) barY = a.y+16;
+      if(barY > minTop-2) barY = minTop-2;
+      const xs=f.items.map(it=>it.child.x).concat([a.x]);
+      const left=Math.min.apply(null,xs), right=Math.max.apply(null,xs);
+      let s = seg(a.x,a.y,a.x,barY);            // vertical drop from couple/parent
+      if(right-left>0.5) s += seg(left,barY,right,barY); // sibling bar
+      f.items.forEach(it=>{
+        const top=it.child.y-nodeRadius(it.child);
+        s += seg(it.child.x,barY,it.child.x,top);
+        const sel=(selected&&selected.kind==='edge'&&selected.id===it.edge.id);
+        if(sel) s += `<line x1="${it.child.x}" y1="${barY}" x2="${it.child.x}" y2="${top}" stroke="#2f6db0" stroke-width="8" opacity="0.28"/>`;
+        s += `<line x1="${it.child.x}" y1="${barY-4}" x2="${it.child.x}" y2="${top}" stroke="transparent" stroke-width="16" data-edge="${it.edge.id}"/>`;
+      });
+      out += `<g class="family">${s}</g>`;
+    });
+    return out;
+  }
+
+  function buildEdges(){
+    let out='';
+    state.edges.forEach(e=>{ if(!PARTNER.has(e.type)&&!CHILDT.has(e.type)) out+=ecoEdgeSVG(e); });
+    state.edges.forEach(e=>{ if(PARTNER.has(e.type)) out+=partnerSVG(e); });
+    out+=familiesSVG();
+    return out;
+  }
+
+  // ---- Household (同居) dashed enclosure ----
+  function householdBBox(members){
+    const ns=members.map(nodeById).filter(Boolean);
+    if(!ns.length) return null;
+    let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+    ns.forEach(n=>{
+      const r=nodeRadius(n);
+      minx=Math.min(minx,n.x-r); maxx=Math.max(maxx,n.x+r);
+      miny=Math.min(miny,n.y-r); maxy=Math.max(maxy,n.y+r);
+      if(n.type!=='resource' && (n.label||'').trim()) maxy=Math.max(maxy,n.y+54);
+    });
+    const pad=20;
+    return {x:minx-pad,y:miny-pad,w:(maxx-minx)+pad*2,h:(maxy-miny)+pad*2};
+  }
+  function householdsSVG(){
+    let out='';
+    state.households.forEach(h=>{
+      const b=householdBBox(h.members); if(!b) return;
+      const sel=selected&&selected.kind==='house'&&selected.id===h.id;
+      const stroke=sel?'#2f6db0':'#1a1a1a';
+      const r=Math.max(18,Math.min(46,Math.min(b.w,b.h)/2));
+      out+=`<g class="house" data-house="${h.id}">`
+        +`<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${r}" ry="${r}" fill="none" stroke="${stroke}" stroke-width="${sel?2.4:1.6}" stroke-dasharray="7 5"/>`
+        +`<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="${r}" ry="${r}" fill="none" stroke="transparent" stroke-width="14"/>`
+        +`</g>`;
+    });
+    return out;
+  }
+
+  function textSVG(t){
+    const sel=(selected&&selected.kind==='text'&&selected.id===t.id);
+    const halo = sel ? `<rect x="${-2}" y="${-t.size}" width="${(t.text||' ').length*t.size*0.62+4}" height="${t.size*1.3}" fill="#2f6db0" opacity="0.12"/>`:'';
+    return `<g class="txt" data-text="${t.id}" transform="translate(${t.x},${t.y})">${halo}<text x="0" y="0" font-size="${t.size}" fill="#1a1a1a" style="dominant-baseline:hanging">${esc(t.text||'')}</text><rect x="-2" y="0" width="${(t.text||' ').length*t.size*0.62+6}" height="${t.size*1.3}" fill="transparent"/></g>`;
+  }
+
+  function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  function worldMarkup(includeGrid){
+    let bg = (includeGrid && opt.grid) ? `<rect x="-4000" y="-4000" width="8000" height="8000" fill="url(#grid)"/>` : '';
+    const edges = buildEdges();
+    const nodes = state.nodes.map(nodeSVG).join('');
+    const texts = state.texts.map(textSVG).join('');
+    return `${bg}<g id="houseLayer">${householdsSVG()}</g><g id="edgeLayer">${edges}</g><g id="nodeLayer">${nodes}</g><g id="textLayer">${texts}</g>`;
+  }
+
+  let _saveTimer=null;
+  function scheduleSave(){ clearTimeout(_saveTimer); _saveTimer=setTimeout(save,400); }
+  function render(){
+    stage.innerHTML = defsMarkup() +
+      `<g id="world" transform="translate(${view.tx},${view.ty}) scale(${view.s})">${worldMarkup(true)}</g>`;
+    scheduleSave();
+  }
+
+  // ===================== Household (同居) mode =====================
+  const houseBar=document.getElementById('houseBar');
+  const houseBarLabel=document.getElementById('houseBarLabel');
+  function startHouseMode(target){
+    // exit other modes
+    if(lineTool){ lineTool=null; connectFrom=null; document.querySelectorAll('.line-item').forEach(e=>e.classList.remove('active')); stage.classList.remove('connecting'); }
+    deselect();
+    const existing = target!=='new' ? state.households.find(h=>h.id===target) : null;
+    houseMode = { target, members:new Set(existing?existing.members:[]) };
+    updateHouseBar(); houseBar.classList.add('show'); hideHint(); render();
+  }
+  function updateHouseBar(){
+    if(!houseMode) return;
+    houseBarLabel.textContent = `同居する人をクリックで選択（${houseMode.members.size}人）`;
+  }
+  function toggleHouseMember(id){
+    if(!houseMode) return;
+    if(houseMode.members.has(id)) houseMode.members.delete(id); else houseMode.members.add(id);
+    updateHouseBar(); render();
+  }
+  function confirmHouseMode(){
+    if(!houseMode) return;
+    const members=[...houseMode.members];
+    if(members.length>=1){
+      if(houseMode.target==='new'){ state.households.push({id:uid(),members}); }
+      else { const h=state.households.find(x=>x.id===houseMode.target); if(h) h.members=members; }
+    }
+    endHouseMode(); save();
+  }
+  function endHouseMode(){ houseMode=null; houseBar.classList.remove('show'); render(); }
+  document.getElementById('houseOk').addEventListener('click',confirmHouseMode);
+  document.getElementById('houseCancel').addEventListener('click',endHouseMode);
+
+  // ===================== Palette build =====================
+  function miniNode(opts){
+    const n=Object.assign({x:0,y:0,label:opts.label||''},opts);
+    return `<svg viewBox="-40 -40 80 80">${shapeMarkup(n,1)}${n.type==='resource'?`<text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="15">${esc((n.label||'').slice(0,4))}</text>`:''}</svg>`;
+  }
+  function miniLine(type){
+    const fake={type, from:'a', to:'b'};
+    const p1={x:4,y:9}, p2={x:42,y:9}, ux=1,uy=0;
+    let attrs='stroke="#1a1a1a" fill="none"',extra='';
+    switch(type){
+      case 'cohabit': attrs+=' stroke-width="2" stroke-dasharray="6 4"';break;
+      case 'strong': attrs+=' stroke-width="4"';break;
+      case 'weak': attrs+=' stroke-width="2" stroke-dasharray="2 4"';break;
+      case 'conflict': attrs+=' stroke-width="2"';extra=hatchMarks(p1,p2,ux,uy);break;
+      case 'arrow1': attrs+=' stroke-width="2" marker-end="url(#arrow)"';break;
+      case 'arrow2': attrs+=' stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)"';break;
+      case 'divorce': attrs+=' stroke-width="2"';extra=slashMarks(p1,p2,ux,uy,2);break;
+      case 'separation': attrs+=' stroke-width="2"';extra=slashMarks(p1,p2,ux,uy,1);break;
+      default: attrs+=' stroke-width="2"';
+    }
+    return `<svg viewBox="0 0 46 18">${defsMarkup()}<line x1="4" y1="9" x2="42" y2="9" ${attrs}/>${extra}</svg>`;
+  }
+
+  function buildPalette(){
+    const pal=document.getElementById('palette');
+    let h='';
+    h+=`<div class="sec-title">人物</div><div class="grid">`;
+    PERSON.forEach(p=>{ h+=`<div class="pal-item" data-add='${JSON.stringify(p.opts)}'>${miniNode(p.opts)}<span class="cap">${p.label}</span></div>`; });
+    h+=`</div>`;
+    h+=`<div class="sec-title">エコマップ</div><div class="grid">`;
+    ECO.forEach(p=>{ h+=`<div class="pal-item" data-add='${JSON.stringify(p.opts)}'>${miniNode({type:'resource'})}<span class="cap">${p.label}</span></div>`; });
+    h+=`</div>`;
+    h+=`<div class="sec-title">続柄（ジェノグラム）</div><div class="line-list" id="genoLines">`;
+    GENO_LINES.forEach(l=>{ h+=`<div class="line-item" data-line="${l.type}">${miniLine(l.type)}<span class="cap">${l.label}</span></div>`; });
+    h+=`</div>`;
+    h+=`<div class="sec-title">関係（エコマップ）</div><div class="line-list" id="ecoLines">`;
+    ECO_LINES.forEach(l=>{ h+=`<div class="line-item" data-line="${l.type}">${miniLine(l.type)}<span class="cap">${l.label}</span></div>`; });
+    h+=`</div>`;
+    h+=`<div class="sec-title">世帯（同居）</div><div class="line-list">
+        <div class="line-item" id="addHouse"><svg viewBox="0 0 46 18"><rect x="3" y="3" width="40" height="12" rx="6" fill="none" stroke="#1a1a1a" stroke-width="1.4" stroke-dasharray="4 3"/></svg><span class="cap">同居を点線で囲む</span></div>
+      </div>`;
+    h+=`<div class="sec-title">テキスト</div><div class="line-list">
+        <div class="line-item" id="addText"><svg viewBox="0 0 46 18"><text x="4" y="14" font-size="14" font-family="sans-serif">あ A 1</text></svg><span class="cap">文字を追加</span></div>
+      </div>`;
+    pal.innerHTML=h;
+
+    pal.querySelectorAll('[data-add]').forEach(el=>{
+      el.addEventListener('click',()=>{ addNode(JSON.parse(el.getAttribute('data-add'))); });
+    });
+    pal.querySelectorAll('[data-line]').forEach(el=>{
+      el.addEventListener('click',()=>toggleLineTool(el.getAttribute('data-line'),el));
+    });
+    document.getElementById('addText').addEventListener('click',()=>{
+      const c=viewportCenter(); addText(c.x,c.y);
+    });
+    document.getElementById('addHouse').addEventListener('click',()=>startHouseMode('new'));
+  }
+
+  // ===================== Add / edit =====================
+  let cascade=0;
+  function viewportCenter(){
+    const r=stage.getBoundingClientRect();
+    return { x:(r.width/2 - view.tx)/view.s, y:(r.height/2 - view.ty)/view.s };
+  }
+  function addNode(opts){
+    const c=viewportCenter();
+    const off=(cascade%6)*22; cascade++;
+    const n=Object.assign({ id:uid(), x:snap(c.x+off-50), y:snap(c.y+off-30), label:'', sub:'' }, opts);
+    if(n.type==='resource' && !('label' in opts)) n.label='';
+    state.nodes.push(n);
+    select({kind:'node',id:n.id});
+    render();
+  }
+  function addText(x,y){
+    const t={id:uid(), x:snap(x), y:snap(y), text:'テキスト', size:16};
+    state.texts.push(t);
+    select({kind:'text',id:t.id});
+    render();
+  }
+  function toolHint(phase){
+    if(CHILDT.has(lineTool)) return phase==='start'?'親をクリック':phase==='end'?'子をクリック（続けて他の子も）':'親→子の順にクリック';
+    if(PARTNER.has(lineTool)) return phase==='start'?'夫婦の一方をクリック':phase==='end'?'もう一方をクリック':'夫婦となる2人をクリック';
+    return phase==='start'?'始点をクリック':phase==='end'?'終点をクリック':'始点→終点をクリック';
+  }
+  function toggleLineTool(type,el){
+    document.querySelectorAll('.line-item').forEach(e=>e.classList.remove('active'));
+    if(lineTool===type){ lineTool=null; connectFrom=null; stage.classList.remove('connecting'); hideHint(); render(); return; }
+    lineTool=type; connectFrom=null;
+    el.classList.add('active');
+    stage.classList.add('connecting');
+    showHint(toolHint('begin'));
+  }
+
+  // ===================== Selection / inspector =====================
+  function select(sel){ selected=sel; renderInspector(); render(); 
+    if(window.matchMedia('(max-width:780px)').matches && sel) document.getElementById('inspector').classList.add('open');
+  }
+  function deselect(){ selected=null; renderInspector(); render(); document.getElementById('inspector').classList.remove('open'); }
+
+  function renderInspector(){
+    const box=document.getElementById('inspContent');
+    if(!selected){
+      box.innerHTML=`<div class="insp-title">使い方</div>
+        <div class="insp-empty">
+        ・左のアイコンをクリックで配置<br>
+        ・図形をドラッグで移動（グリッド吸着）<br>
+        ・<b>婚姻</b>を選び夫婦の2人をクリック→横線で結ばれます<br>
+        ・<b>親子</b>を選び「親→子」をクリック。同じ夫婦の子を続けてクリックすると<b>兄弟線</b>が自動でまとまります<br>
+        ・削除は選択して Delete か、ゴミ箱へドラッグ
+        </div>
+        <div class="sec-title" style="margin-top:14px">凡例</div>
+        <div class="legend">
+        <b>□</b>男性 <b>○</b>女性 <b>◇</b>不明 <b>△</b>妊娠<br>
+        <b>×</b>死亡 / <b>二重枠</b>本人（中心人物）<br>
+        婚姻=横線 / 離婚=斜線2本 / 別居=斜線1本 / 同居=破線<br>
+        親子=中央から真下→兄弟線→各子へ<br>
+        （エコマップ）強い太線・希薄点線・葛藤斜線・矢印
+        </div>`;
+      return;
+    }
+    if(selected.kind==='node'){
+      const n=nodeById(selected.id); if(!n){deselect();return;}
+      if(n.type==='resource'){
+        box.innerHTML=`<div class="insp-title">エコマップ：項目</div>
+          <div class="field"><label>名称</label><input type="text" id="f_label" value="${esc(n.label||'')}"></div>
+          <div class="checks"><label><input type="checkbox" id="f_big" ${n.big?'checked':''}> 中心（大きめの円）</label></div>
+          <button class="insp-del" id="f_del">この項目を削除</button>`;
+        bindField('f_label','label',n,true);
+        document.getElementById('f_big').addEventListener('change',e=>{n.big=e.target.checked;render();});
+      } else {
+        box.innerHTML=`<div class="insp-title">人物</div>
+          <div class="field"><label>名前</label><input type="text" id="f_label" value="${esc(n.label||'')}" placeholder="例）鈴木 太郎"></div>
+          <div class="field"><label>年齢・記号（図形内に表示）</label><input type="text" id="f_sub" value="${esc(n.sub||'')}" placeholder="例）82"></div>
+          <div class="checks">
+            <label><input type="checkbox" id="f_dec" ${n.deceased?'checked':''}> 死亡（×）</label>
+            <label><input type="checkbox" id="f_idx" ${n.index?'checked':''}> 本人・中心人物（二重枠）</label>
+            <label><input type="checkbox" id="f_fill" ${n.filled?'checked':''}> 塗りつぶし</label>
+          </div>
+          <button class="insp-del" id="f_del">この人物を削除</button>`;
+        bindField('f_label','label',n);
+        bindField('f_sub','sub',n);
+        ['dec:deceased','idx:index','fill:filled'].forEach(p=>{
+          const [k,prop]=p.split(':');
+          document.getElementById('f_'+k).addEventListener('change',e=>{n[prop]=e.target.checked;render();});
+        });
+      }
+      document.getElementById('f_del').addEventListener('click',()=>delSelected());
+    } else if(selected.kind==='edge'){
+      const e=state.edges.find(x=>x.id===selected.id); if(!e){deselect();return;}
+      const all=[...GENO_LINES,...ECO_LINES];
+      const opts=all.map(l=>`<option value="${l.type}" ${l.type===e.type?'selected':''}>${l.label}</option>`).join('');
+      box.innerHTML=`<div class="insp-title">関係線</div>
+        <div class="field"><label>種類</label><select id="f_type">${opts}</select></div>
+        <button class="insp-del" id="f_del">この線を削除</button>`;
+      document.getElementById('f_type').addEventListener('change',ev=>{e.type=ev.target.value;render();});
+      document.getElementById('f_del').addEventListener('click',()=>delSelected());
+    } else if(selected.kind==='text'){
+      const t=state.texts.find(x=>x.id===selected.id); if(!t){deselect();return;}
+      box.innerHTML=`<div class="insp-title">テキスト</div>
+        <div class="field"><label>内容</label><textarea id="f_text" rows="2">${esc(t.text||'')}</textarea></div>
+        <div class="field"><label>文字サイズ</label><select id="f_size">
+          ${[12,14,16,18,22,28].map(s=>`<option value="${s}" ${s===t.size?'selected':''}>${s}px</option>`).join('')}
+        </select></div>
+        <button class="insp-del" id="f_del">このテキストを削除</button>`;
+      document.getElementById('f_text').addEventListener('input',ev=>{t.text=ev.target.value;render();});
+      document.getElementById('f_size').addEventListener('change',ev=>{t.size=+ev.target.value;render();});
+      document.getElementById('f_del').addEventListener('click',()=>delSelected());
+    } else if(selected.kind==='house'){
+      const h=state.households.find(x=>x.id===selected.id); if(!h){deselect();return;}
+      box.innerHTML=`<div class="insp-title">同居（世帯）</div>
+        <div class="insp-empty" style="margin-bottom:11px">同居している人を点線で囲んでいます（現在 ${h.members.length}人）。<br>人を動かすと枠も追従します。</div>
+        <button class="insp-del" id="f_edit" style="border-color:#d98324;color:#d98324;margin-bottom:8px">囲む人を選び直す</button>
+        <button class="insp-del" id="f_del">この枠を削除</button>`;
+      document.getElementById('f_edit').addEventListener('click',()=>startHouseMode(h.id));
+      document.getElementById('f_del').addEventListener('click',()=>delSelected());
+    }
+  }
+  function bindField(elId,prop,obj){
+    document.getElementById(elId).addEventListener('input',e=>{obj[prop]=e.target.value;render();});
+  }
+  function delSelected(){
+    if(!selected) return;
+    if(selected.kind==='node'){
+      state.nodes=state.nodes.filter(n=>n.id!==selected.id);
+      state.edges=state.edges.filter(e=>e.from!==selected.id&&e.to!==selected.id);
+      state.households.forEach(h=>{ h.members=h.members.filter(id=>id!==selected.id); });
+      state.households=state.households.filter(h=>h.members.length);
+    } else if(selected.kind==='edge'){
+      state.edges=state.edges.filter(e=>e.id!==selected.id);
+    } else if(selected.kind==='text'){
+      state.texts=state.texts.filter(t=>t.id!==selected.id);
+    } else if(selected.kind==='house'){
+      state.households=state.households.filter(h=>h.id!==selected.id);
+    }
+    deselect(); save();
+  }
+
+  // ===================== Pointer interaction =====================
+  let drag=null;  // {kind, id, dx, dy, moved}
+  let pan=null;
+
+  function toWorld(clientX,clientY){
+    const r=stage.getBoundingClientRect();
+    return { x:(clientX-r.left-view.tx)/view.s, y:(clientY-r.top-view.ty)/view.s };
+  }
+
+  stage.addEventListener('pointerdown',e=>{
+    const target=e.target.closest('[data-node],[data-edge],[data-text],[data-house]');
+    const w=toWorld(e.clientX,e.clientY);
+
+    // household pick mode: tap nodes to toggle membership
+    if(houseMode){
+      const ng=e.target.closest('[data-node]');
+      if(ng) toggleHouseMember(ng.getAttribute('data-node'));
+      return;
+    }
+
+    // connect mode
+    if(lineTool){
+      const ng=e.target.closest('[data-node]');
+      if(ng){
+        const id=ng.getAttribute('data-node');
+        if(!connectFrom){ connectFrom=id; showHint(toolHint('end')); render(); }
+        else if(connectFrom!==id){
+          state.edges.push({id:uid(),type:lineTool,from:connectFrom,to:id});
+          connectFrom=null; showHint(toolHint('start')); render(); save();
+        }
+      }
+      return;
+    }
+
+    if(target){
+      stage.setPointerCapture(e.pointerId);
+      if(target.hasAttribute('data-node')){
+        const n=nodeById(target.getAttribute('data-node'));
+        select({kind:'node',id:n.id});
+        drag={kind:'node',id:n.id,dx:w.x-n.x,dy:w.y-n.y,moved:false};
+      } else if(target.hasAttribute('data-text')){
+        const t=state.texts.find(x=>x.id===target.getAttribute('data-text'));
+        select({kind:'text',id:t.id});
+        drag={kind:'text',id:t.id,dx:w.x-t.x,dy:w.y-t.y,moved:false};
+      } else if(target.hasAttribute('data-edge')){
+        select({kind:'edge',id:target.getAttribute('data-edge')});
+      } else if(target.hasAttribute('data-house')){
+        select({kind:'house',id:target.getAttribute('data-house')});
+      }
+    } else {
+      // pan
+      stage.setPointerCapture(e.pointerId);
+      pan={x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty,moved:false};
+      stage.classList.add('panning');
+      deselect();
+    }
+  });
+
+  stage.addEventListener('pointermove',e=>{
+    if(drag){
+      const w=toWorld(e.clientX,e.clientY);
+      drag.moved=true;
+      let nx=snap(w.x-drag.dx), ny=snap(w.y-drag.dy);
+      const obj = drag.kind==='node' ? nodeById(drag.id) : state.texts.find(t=>t.id===drag.id);
+      if(obj){ obj.x=nx; obj.y=ny; render(); }
+      // trash hover
+      const tr=document.getElementById('trash');
+      const rb=tr.getBoundingClientRect();
+      const over = e.clientX>=rb.left&&e.clientX<=rb.right&&e.clientY>=rb.top&&e.clientY<=rb.bottom;
+      tr.classList.toggle('hot',over);
+    } else if(pan){
+      view.tx=pan.tx+(e.clientX-pan.x);
+      view.ty=pan.ty+(e.clientY-pan.y);
+      pan.moved=true;
+      applyViewTransform();
+    }
+  });
+
+  stage.addEventListener('pointerup',e=>{
+    if(drag){
+      const tr=document.getElementById('trash');
+      if(tr.classList.contains('hot')){ tr.classList.remove('hot'); delSelected(); }
+      else if(drag.moved){ save(); }
+      drag=null;
+    }
+    if(pan){ pan=null; stage.classList.remove('panning'); }
+  });
+  stage.addEventListener('pointercancel',()=>{drag=null;pan=null;stage.classList.remove('panning');});
+
+  // double click text/node = focus name; double click empty = add text
+  stage.addEventListener('dblclick',e=>{
+    const ng=e.target.closest('[data-node]');
+    if(ng){ const f=document.getElementById('f_label'); if(f){f.focus();f.select&&f.select();} return; }
+    const tg=e.target.closest('[data-text]');
+    if(tg){ const f=document.getElementById('f_text'); if(f)f.focus(); return; }
+    if(!e.target.closest('[data-edge]')){ const w=toWorld(e.clientX,e.clientY); addText(w.x,w.y); }
+  });
+
+  function applyViewTransform(){
+    const wg=stage.querySelector('#world');
+    if(wg) wg.setAttribute('transform',`translate(${view.tx},${view.ty}) scale(${view.s})`);
+  }
+
+  // ===================== Zoom / pan controls =====================
+  function zoomAt(factor, cx, cy){
+    const r=stage.getBoundingClientRect();
+    cx = cx==null ? r.width/2 : cx-r.left;
+    cy = cy==null ? r.height/2 : cy-r.top;
+    const ns=Math.min(3,Math.max(0.25,view.s*factor));
+    const k=ns/view.s;
+    view.tx = cx - (cx-view.tx)*k;
+    view.ty = cy - (cy-view.ty)*k;
+    view.s=ns; applyViewTransform();
+  }
+  document.getElementById('zoomIn').onclick=()=>zoomAt(1.2);
+  document.getElementById('zoomOut').onclick=()=>zoomAt(1/1.2);
+  document.getElementById('zoomFit').onclick=fitView;
+  stage.addEventListener('wheel',e=>{ e.preventDefault(); zoomAt(e.deltaY<0?1.1:1/1.1, e.clientX, e.clientY); },{passive:false});
+
+  function contentBBox(){
+    const pts=[];
+    state.nodes.forEach(n=>{const r=nodeRadius(n);pts.push([n.x-r,n.y-r],[n.x+r,n.y+r+30]);});
+    state.texts.forEach(t=>{pts.push([t.x,t.y],[t.x+(t.text||'').length*t.size*0.62,t.y+t.size*1.3]);});
+    state.households.forEach(h=>{const b=householdBBox(h.members);if(b){pts.push([b.x,b.y],[b.x+b.w,b.y+b.h]);}});
+    if(!pts.length) return null;
+    let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+    pts.forEach(p=>{minx=Math.min(minx,p[0]);miny=Math.min(miny,p[1]);maxx=Math.max(maxx,p[0]);maxy=Math.max(maxy,p[1]);});
+    return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+  }
+  function fitView(){
+    const bb=contentBBox();
+    const r=stage.getBoundingClientRect();
+    if(!bb){ view={tx:r.width/2,ty:r.height/2,s:1}; render(); return; }
+    const pad=60;
+    const s=Math.min(2, Math.max(0.25, Math.min((r.width-pad*2)/Math.max(bb.w,1),(r.height-pad*2)/Math.max(bb.h,1))));
+    view.s=s;
+    view.tx = (r.width - bb.w*s)/2 - bb.minx*s;
+    view.ty = (r.height - bb.h*s)/2 - bb.miny*s;
+    render();
+  }
+
+  // ===================== Hint =====================
+  let hintTimer=null;
+  function showHint(msg){ const h=document.getElementById('hint'); h.textContent=msg; h.classList.add('show'); }
+  function hideHint(){ document.getElementById('hint').classList.remove('show'); }
+
+  // ===================== Keyboard =====================
+  window.addEventListener('keydown',e=>{
+    const tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='input'||tag==='textarea'||tag==='select') return;
+    if(houseMode){
+      if(e.key==='Enter'){ e.preventDefault(); confirmHouseMode(); }
+      else if(e.key==='Escape'){ e.preventDefault(); endHouseMode(); }
+      return;
+    }
+    if((e.key==='Delete'||e.key==='Backspace')&&selected){ e.preventDefault(); delSelected(); }
+    if(e.key==='Escape'){ if(lineTool){toggleLineTool(lineTool,document.querySelector(`[data-line="${lineTool}"]`));} else deselect(); }
+  });
+
+  // ===================== Settings =====================
+  const pop=document.getElementById('settingsPop');
+  document.getElementById('btnSettings').onclick=()=>pop.classList.toggle('show');
+  document.addEventListener('pointerdown',e=>{ if(!pop.contains(e.target)&&e.target.id!=='btnSettings'&&!e.target.closest('#btnSettings')) pop.classList.remove('show'); },true);
+  document.getElementById('optGrid').onchange=e=>{opt.grid=e.target.checked;render();save();};
+  document.getElementById('optSnap').onchange=e=>{opt.snap=e.target.checked;save();};
+
+  // ===================== File: new / save / open =====================
+  document.getElementById('btnNew').onclick=()=>{
+    if(state.nodes.length||state.texts.length){ if(!confirm('現在の図を消去して新規作成しますか？')) return; }
+    state.nodes=[];state.edges=[];state.texts=[];state.households=[];state.seq=1;cascade=0;
+    if(houseMode) endHouseMode();
+    deselect(); save();
+  };
+  document.getElementById('btnSave').onclick=()=>{
+    const data=JSON.stringify({v:1,state,opt});
+    download(new Blob([data],{type:'application/json'}),'ジェノグラム.json');
+  };
+  document.getElementById('btnOpen').onclick=()=>document.getElementById('fileInput').click();
+  document.getElementById('fileInput').onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{ try{
+      const d=JSON.parse(rd.result);
+      if(d.state){ state.nodes=d.state.nodes||[]; state.edges=d.state.edges||[]; state.texts=d.state.texts||[]; state.households=d.state.households||[]; state.seq=d.state.seq||1; }
+      if(d.opt){ opt=Object.assign(opt,d.opt); document.getElementById('optGrid').checked=opt.grid; document.getElementById('optSnap').checked=opt.snap; }
+      if(houseMode) endHouseMode();
+      deselect(); fitView(); save();
+    }catch(err){ alert('ファイルを読み込めませんでした。'); } };
+    rd.readAsText(f); e.target.value='';
+  };
+  function download(blob,name){
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+
+  // ===================== Export SVG string (for PNG/print) =====================
+  function exportSVG(){
+    const bb=contentBBox(); if(!bb) return null;
+    const pad=40;
+    const w=bb.w+pad*2, h=bb.h+pad*2;
+    const inner=`<g transform="translate(${pad-bb.minx},${pad-bb.miny})">${worldMarkup(false)}</g>`;
+    return {svg:`<svg xmlns="${SVGNS}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${defsMarkup()}<rect width="${w}" height="${h}" fill="#fff"/>${inner}</svg>`, w, h};
+  }
+  document.getElementById('btnPng').onclick=()=>{
+    const out=exportSVG(); if(!out){alert('図がありません。');return;}
+    const scale=2;
+    const img=new Image();
+    const url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(out.svg);
+    img.onload=()=>{
+      const c=document.createElement('canvas'); c.width=out.w*scale; c.height=out.h*scale;
+      const ctx=c.getContext('2d'); ctx.scale(scale,scale); ctx.drawImage(img,0,0);
+      c.toBlob(b=>download(b,'ジェノグラム.png'),'image/png');
+    };
+    img.onerror=()=>alert('画像の生成に失敗しました。');
+    img.src=url;
+  };
+  document.getElementById('btnPrint').onclick=()=>{
+    const out=exportSVG(); if(!out){alert('図がありません。');return;}
+    const pa=document.getElementById('printArea');
+    pa.innerHTML=`<div style="width:100%;text-align:center"><div style="max-width:100%;max-height:100%;display:inline-block">${out.svg.replace('<svg ','<svg style="max-width:100%;height:auto" ')}</div></div>`;
+    window.print();
+    setTimeout(()=>{pa.innerHTML='';},500);
+  };
+
+  // ===================== Autosave (guarded) =====================
+  function save(){ try{ localStorage.setItem('geno-ecomap', JSON.stringify({v:1,state,opt,view})); }catch(e){} }
+  function restore(){
+    try{
+      const raw=localStorage.getItem('geno-ecomap'); if(!raw) return false;
+      const d=JSON.parse(raw);
+      if(d.state){ state.nodes=d.state.nodes||[]; state.edges=d.state.edges||[]; state.texts=d.state.texts||[]; state.households=d.state.households||[]; state.seq=d.state.seq||1; }
+      if(d.opt){ opt=Object.assign(opt,d.opt); }
+      if(d.view){ view=d.view; }
+      return state.nodes.length>0 || state.texts.length>0;
+    }catch(e){ return false; }
+  }
+  // periodic save during edits handled via render-triggers; also save on unload
+  window.addEventListener('beforeunload',save);
+
+  // ===================== Init =====================
+  function init(){
+    buildPalette();
+    document.getElementById('optGrid').checked=opt.grid;
+    document.getElementById('optSnap').checked=opt.snap;
+    const had=restore();
+    if(had){ render(); fitView(); }
+    else {
+      // center the empty canvas
+      const r=stage.getBoundingClientRect();
+      view={tx:r.width/2,ty:r.height/2,s:1};
+      render();
+    }
+  }
+  window.addEventListener('resize',()=>{ /* keep transform */ });
+  init();
+})();
+</script>
+</body>
+</html>
