@@ -381,14 +381,25 @@ function cellText(cell){
 function borderCss(b){
   if(!b||!b.style)return 'none';
   switch(b.style){
-    case 'thick':return '2.2px solid #000';
     case 'medium':return '1.5px solid #000';
+    case 'thin':return '0.75px solid #000';
+    case 'thick':return '2.2px solid #000';
     case 'double':return '3px double #000';
     case 'dashed':return '1px dashed #000';
     case 'dotted':return '1px dotted #000';
     case 'hair':return '0.5px solid #000';
-    default:return '1px solid #000';
+    default:return '0.75px solid #000';
   }
+}
+// Excelのフォント名をWeb用のfont-familyスタックへ（属性値が "" 区切りのため単引用符を使用）
+function fontFamily(name){
+  if(!name)return '';
+  var stack=["'"+name+"'"];
+  if(/Meiryo/i.test(name))stack.push("'Meiryo UI'","Meiryo");
+  if(/游ゴシック|Yu ?Gothic/i.test(name))stack.push("'Yu Gothic'","'游ゴシック'");
+  if(/ゴシック|PGothic|Ｐゴシック/i.test(name))stack.push("'MS PGothic'","'ＭＳ Ｐゴシック'");
+  stack.push("'Noto Sans JP'","sans-serif");
+  return stack.join(',');
 }
 function renderPrint(ws){
   var maxRow=ws.rowCount||1, maxCol=ws.columnCount||1, c;
@@ -432,9 +443,12 @@ function renderPrint(ws){
       st.push('text-align:'+(ha==='center'||ha==='centerContinuous'?'center':ha==='right'?'right':'left'));
       var va=al.vertical;
       st.push('vertical-align:'+(va==='middle'?'middle':va==='bottom'?'bottom':'top'));
-      st.push('white-space:pre-wrap');
+      var isVert=al.textRotation==='vertical'||al.textRotation===90||al.textRotation===255;
+      if(isVert){st.push('writing-mode:vertical-rl');st.push('text-orientation:upright');st.push('white-space:nowrap');}
+      else st.push('white-space:'+(al.wrapText?'normal':'pre-wrap'));
+      if(f.name)st.push('font-family:'+fontFamily(f.name));
       if(f.bold)st.push('font-weight:700');
-      var fs=(f.size||10.5)*scale*1.3;if(fs<6)fs=6;
+      var fs=(f.size||11)*scale*1.3;if(fs<6)fs=6;
       st.push('font-size:'+fs.toFixed(1)+'px');
       var fl=cell.fill;
       if(fl&&fl.type==='pattern'&&fl.pattern&&fl.pattern!=='none'&&fl.fgColor&&fl.fgColor.argb){
