@@ -439,14 +439,18 @@ function renderPrint(ws){
       if(covered[r+'_'+c])continue;
       var cell=ws.getCell(r,c);
       var sp=spanMap[r+'_'+c];
+      var rs=sp?sp.rs:1, cs=sp?sp.cs:1;
       var attr='';
       if(sp){if(sp.rs>1)attr+=' rowspan="'+sp.rs+'"';if(sp.cs>1)attr+=' colspan="'+sp.cs+'"';}
       var bd=cell.border||{},al=cell.alignment||{},f=cell.font||{};
       var st=[];
+      // 結合セルの下/右罫線はExcelでは結合範囲の最終行/最終列のセルに設定されるため、そこから読む
+      var bBottom=(rs>1?(ws.getCell(r+rs-1,c).border||{}):bd).bottom;
+      var bRight=(cs>1?(ws.getCell(r,c+cs-1).border||{}):bd).right;
       st.push('border-top:'+borderCss(bd.top));
-      st.push('border-bottom:'+borderCss(bd.bottom));
+      st.push('border-bottom:'+borderCss(bBottom));
       st.push('border-left:'+borderCss(bd.left));
-      st.push('border-right:'+borderCss(bd.right));
+      st.push('border-right:'+borderCss(bRight));
       var ha=al.horizontal;
       st.push('text-align:'+(ha==='center'||ha==='centerContinuous'?'center':ha==='right'?'right':'left'));
       var va=al.vertical;
