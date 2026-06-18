@@ -417,6 +417,26 @@ function selAll(g){return [].slice.call(document.querySelectorAll('[data-grp="'+
 function jpDate(iso){if(!iso)return '';var p=iso.split('-');if(p.length<3)return '';var y=+p[0];return '令和'+(y-2018)+'年'+(+p[1])+'月'+(+p[2])+'日';}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
 
+// 生年月日（元号+年月日）から記入日基準の年齢を算出して自動入力
+function eraBaseYear(e){return {'明':1867,'大':1911,'昭':1925,'平':1988,'令':2018}[e];}
+function calcAgeFromBirth(){
+  var base=eraBaseYear(val('era'));
+  var by=parseInt(val('by'),10),bm=parseInt(val('bm'),10),bd=parseInt(val('bd'),10);
+  if(!base||!by||!bm||!bd)return; // 生年月日が未入力／不完全
+  var rec=document.getElementById('recDate').value;if(!rec)return;
+  var rp=rec.split('-');if(rp.length<3)return;
+  var ry=+rp[0],rm=+rp[1],rd=+rp[2];
+  var age=ry-(base+by);
+  if(rm<bm||(rm===bm&&rd<bd))age--; // 誕生日未到来なら1引く
+  if(age<0||age>130)return; // 異常値は無視
+  var el=document.querySelector('[data-k="age"]');if(el)el.value=age;
+}
+['era','by','bm','bd'].forEach(function(k){
+  var el=document.querySelector('[data-k="'+k+'"]');
+  if(el){el.addEventListener('change',calcAgeFromBirth);el.addEventListener('input',calcAgeFromBirth);}
+});
+document.getElementById('recDate').addEventListener('change',calcAgeFromBirth);
+
 document.getElementById('clearBtn').addEventListener('click',function(){
   if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
   document.querySelectorAll('.chip.on').forEach(function(c){c.classList.remove('on');});
