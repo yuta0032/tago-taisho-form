@@ -44,8 +44,8 @@
   /* ---------- Layout ---------- */
   .main{flex:1 1 auto;display:flex;min-height:0;}
   .palette{
-    flex:0 0 168px;background:var(--panel);border-right:1px solid var(--border);
-    overflow-y:auto;padding:8px;
+    flex:0 0 286px;background:var(--panel);border-right:1px solid var(--border);
+    overflow-y:auto;padding:10px;
   }
   .stage-wrap{flex:1 1 auto;position:relative;min-width:0;}
   .inspector{
@@ -55,29 +55,29 @@
 
   /* ---------- Palette ---------- */
   .sec-title{
-    font-size:12px;font-weight:700;color:var(--accent);margin:10px 2px 6px;
+    font-size:12px;font-weight:700;color:var(--accent);margin:9px 2px 6px;
     padding-bottom:3px;border-bottom:2px solid var(--accent-soft);display:flex;align-items:center;gap:5px;
   }
   .sec-title:first-child{margin-top:2px;}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   .pal-item{
-    background:#fbfcfe;border:1px solid var(--border);border-radius:7px;
-    aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    cursor:pointer;transition:all .1s;padding:2px;
+    background:#fbfcfe;border:1px solid var(--border);border-radius:9px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;transition:all .1s;padding:9px 4px;min-height:80px;
   }
   .pal-item:hover{border-color:var(--accent);background:var(--accent-soft);}
   .pal-item:active{transform:scale(.94);}
-  .pal-item svg{width:100%;height:auto;max-height:34px;}
-  .pal-item .cap{font-size:9px;color:var(--muted);margin-top:2px;line-height:1;text-align:center;}
-  .line-list{display:flex;flex-direction:column;gap:5px;}
+  .pal-item svg{width:auto;height:auto;max-height:42px;max-width:100%;}
+  .pal-item .cap{font-size:10.5px;color:var(--muted);margin-top:6px;line-height:1.15;text-align:center;}
+  .line-list{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
   .line-item{
-    display:flex;align-items:center;gap:8px;background:#fbfcfe;border:1px solid var(--border);
-    border-radius:7px;padding:6px 8px;cursor:pointer;transition:all .1s;
+    display:flex;flex-direction:column;align-items:center;gap:5px;background:#fbfcfe;border:1px solid var(--border);
+    border-radius:9px;padding:9px 6px;cursor:pointer;transition:all .1s;min-height:60px;justify-content:center;
   }
   .line-item:hover{border-color:var(--accent);background:var(--accent-soft);}
   .line-item.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset;}
-  .line-item svg{flex:0 0 46px;height:18px;}
-  .line-item .cap{font-size:11px;color:#333;}
+  .line-item svg{width:48px;height:19px;}
+  .line-item .cap{font-size:10.5px;color:#333;text-align:center;line-height:1.2;}
 
   /* ---------- Stage ---------- */
   #stage{width:100%;height:100%;display:block;background:#fff;touch-action:none;cursor:default;}
@@ -149,47 +149,13 @@
   .pop label{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:8px;cursor:pointer;color:#333;}
   .pop input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);}
 
-  /* ---------- full palette modal ---------- */
-  .fp-overlay{
-    position:fixed;inset:0;background:rgba(20,30,50,.5);z-index:70;display:none;
-    align-items:flex-start;justify-content:center;padding:14px;overflow:auto;
-  }
-  .fp-overlay.show{display:flex;}
-  .fp-sheet{
-    background:#fff;border-radius:16px;width:100%;max-width:780px;margin:auto;
-    box-shadow:0 18px 50px rgba(0,0,0,.3);overflow:hidden;
-  }
-  .fp-head{
-    display:flex;align-items:center;justify-content:space-between;gap:10px;
-    padding:12px 16px;background:linear-gradient(var(--header2),var(--header));color:#fff;
-    position:sticky;top:0;
-  }
-  .fp-head .ttl{font-size:14px;font-weight:700;}
-  .fp-close{
-    width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.3);
-    background:rgba(255,255,255,.16);color:#fff;font-size:17px;cursor:pointer;line-height:1;
-  }
-  .fp-close:hover{background:rgba(255,255,255,.28);}
-  .fp-body{padding:8px 16px 18px;}
-  .fp-sec{font-size:12.5px;font-weight:700;color:var(--accent);margin:16px 2px 8px;padding-bottom:3px;border-bottom:2px solid var(--accent-soft);}
-  .fp-sec:first-child{margin-top:6px;}
-  .fp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:10px;}
-  .fp-item{
-    background:#fbfcfe;border:1px solid var(--border);border-radius:11px;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:10px 6px;cursor:pointer;transition:all .1s;min-height:88px;
-  }
-  .fp-item:hover{border-color:var(--accent);background:var(--accent-soft);}
-  .fp-item:active{transform:scale(.95);}
-  .fp-item .pv{height:46px;display:flex;align-items:center;justify-content:center;}
-  .fp-item .pv svg{max-height:44px;max-width:78px;width:auto;height:auto;}
-  .fp-item .cap{font-size:11px;color:#333;margin-top:7px;text-align:center;line-height:1.2;}
-
   /* ---------- mobile ---------- */
   @media (max-width:780px){
     .inspector{position:absolute;right:0;top:0;height:100%;z-index:25;box-shadow:-3px 0 12px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .2s;}
     .inspector.open{transform:translateX(0);}
-    .palette{flex-basis:138px;}
+    .palette{flex-basis:172px;}
+    .grid{grid-template-columns:repeat(2,1fr);}
+    .line-list{grid-template-columns:1fr;}
   }
 
   /* ---------- print ---------- */
@@ -211,7 +177,6 @@
     ジェノグラム・エコマップ作成
   </div>
   <div class="toolbar">
-    <button class="tbtn" id="btnFull" style="background:rgba(255,255,255,.24)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>全表示</button>
     <button class="tbtn" id="btnNew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z"/></svg>新規</button>
     <button class="tbtn" id="btnOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>開く</button>
     <button class="tbtn" id="btnSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>保存</button>
@@ -254,15 +219,6 @@
 </div>
 
 <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
-<div class="fp-overlay" id="fpOverlay">
-  <div class="fp-sheet">
-    <div class="fp-head">
-      <span class="ttl">図形・線をえらぶ</span>
-      <button class="fp-close" id="fpClose" title="閉じる">✕</button>
-    </div>
-    <div class="fp-body" id="fpBody"></div>
-  </div>
-</div>
 <div id="printArea"></div>
 
 <script>
@@ -699,46 +655,6 @@
     document.getElementById('addHouse').addEventListener('click',()=>startHouseMode('new'));
   }
 
-  // ===================== Full palette (全表示) =====================
-  function buildFullPalette(){
-    let h='';
-    h+='<div class="fp-sec">人物</div><div class="fp-grid">';
-    PERSON.forEach(p=>{ h+=`<div class="fp-item" data-add='${JSON.stringify(p.opts)}'><div class="pv">${miniNode(p.opts)}</div><span class="cap">${p.label}</span></div>`; });
-    h+='</div>';
-    h+='<div class="fp-sec">エコマップ</div><div class="fp-grid">';
-    ECO.forEach(p=>{ h+=`<div class="fp-item" data-add='${JSON.stringify(p.opts)}'><div class="pv">${miniNode({type:'resource'})}</div><span class="cap">${p.label}</span></div>`; });
-    h+='</div>';
-    h+='<div class="fp-sec">続柄（ジェノグラム）</div><div class="fp-grid">';
-    GENO_LINES.forEach(l=>{ h+=`<div class="fp-item" data-line="${l.type}"><div class="pv">${miniLine(l.type)}</div><span class="cap">${l.label}</span></div>`; });
-    h+='</div>';
-    h+='<div class="fp-sec">関係（エコマップ）</div><div class="fp-grid">';
-    ECO_LINES.forEach(l=>{ h+=`<div class="fp-item" data-line="${l.type}"><div class="pv">${miniLine(l.type)}</div><span class="cap">${l.label}</span></div>`; });
-    h+='</div>';
-    h+='<div class="fp-sec">世帯・テキスト</div><div class="fp-grid">';
-    h+=`<div class="fp-item" data-house="1"><div class="pv"><svg viewBox="0 0 46 18"><rect x="3" y="3" width="40" height="12" rx="6" fill="none" stroke="#1a1a1a" stroke-width="1.4" stroke-dasharray="4 3"/></svg></div><span class="cap">同居を囲む</span></div>`;
-    h+=`<div class="fp-item" data-text="1"><div class="pv"><svg viewBox="0 0 46 18"><text x="4" y="14" font-size="14" font-family="sans-serif">あ A 1</text></svg></div><span class="cap">文字を追加</span></div>`;
-    h+='</div>';
-    const body=document.getElementById('fpBody');
-    body.innerHTML=h;
-    body.querySelectorAll('[data-add]').forEach(el=>{
-      el.addEventListener('click',()=>{ addNode(JSON.parse(el.getAttribute('data-add'))); closeFullPalette(); });
-    });
-    body.querySelectorAll('[data-line]').forEach(el=>{
-      el.addEventListener('click',()=>{
-        const t=el.getAttribute('data-line');
-        const sideEl=document.querySelector('.palette [data-line="'+t+'"]')||el;
-        toggleLineTool(t, sideEl); closeFullPalette();
-      });
-    });
-    body.querySelector('[data-house]').addEventListener('click',()=>{ closeFullPalette(); startHouseMode('new'); });
-    body.querySelector('[data-text]').addEventListener('click',()=>{ const c=viewportCenter(); addText(c.x,c.y); closeFullPalette(); });
-  }
-  function openFullPalette(){ buildFullPalette(); document.getElementById('fpOverlay').classList.add('show'); }
-  function closeFullPalette(){ document.getElementById('fpOverlay').classList.remove('show'); }
-  document.getElementById('btnFull').addEventListener('click',openFullPalette);
-  document.getElementById('fpClose').addEventListener('click',closeFullPalette);
-  document.getElementById('fpOverlay').addEventListener('click',e=>{ if(e.target.id==='fpOverlay') closeFullPalette(); });
-
   // ===================== Add / edit =====================
   let cascade=0;
   function viewportCenter(){
@@ -785,7 +701,7 @@
     if(!selected){
       box.innerHTML=`<div class="insp-title">使い方</div>
         <div class="insp-empty">
-        ・左のアイコン、または上部「全表示」から図形を選んで配置<br>
+        ・左のアイコンをクリックで配置<br>
         ・図形をドラッグで移動（グリッド吸着）<br>
         ・<b>婚姻</b>を選び夫婦の2人をクリック→横線で結ばれます<br>
         ・<b>親子</b>を選び「親→子」をクリック。同じ夫婦の子を続けてクリックすると<b>兄弟線</b>が自動でまとまります<br>
@@ -1028,10 +944,6 @@
   window.addEventListener('keydown',e=>{
     const tag=(e.target.tagName||'').toLowerCase();
     if(tag==='input'||tag==='textarea'||tag==='select') return;
-    if(document.getElementById('fpOverlay').classList.contains('show')){
-      if(e.key==='Escape'){ e.preventDefault(); closeFullPalette(); }
-      return;
-    }
     if(houseMode){
       if(e.key==='Enter'){ e.preventDefault(); confirmHouseMode(); }
       else if(e.key==='Escape'){ e.preventDefault(); endHouseMode(); }
