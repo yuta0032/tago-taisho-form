@@ -453,7 +453,11 @@ function renderPrint(ws){
       st.push('vertical-align:'+(va==='middle'?'middle':va==='bottom'?'bottom':'top'));
       var isVert=al.textRotation==='vertical'||al.textRotation===90||al.textRotation===255;
       if(isVert){st.push('writing-mode:vertical-rl');st.push('text-orientation:upright');st.push('white-space:nowrap');}
-      else st.push('white-space:'+(al.wrapText?'normal':'nowrap'));
+      else if(al.wrapText){st.push('white-space:normal');}
+      else{
+        // 横書き・折り返しなし：Excel同様、隣の空セルへはみ出して全文表示（クリップしない）
+        st.push('white-space:nowrap');st.push('overflow:visible');st.push('position:relative');st.push('z-index:1');
+      }
       if(f.name)st.push('font-family:'+fontFamily(f.name));
       if(f.bold)st.push('font-weight:700');
       var fs=(f.size||11)*96/72;if(fs<6)fs=6;
