@@ -402,8 +402,15 @@ function fontFamily(name){
   return stack.join(',');
 }
 function renderPrint(ws){
-  var maxRow=ws.rowCount||1, maxCol=ws.columnCount||1, c;
-  // 結合セル（merges）を把握
+  var c, r;
+  // 印刷範囲（pageSetup.printArea 例:"A1:N56"）に従う。無ければシート使用範囲。
+  var minR=1,minC=1,maxRow=ws.rowCount||1,maxCol=ws.columnCount||1,fixedRange=false;
+  var par=ws.pageSetup&&ws.pageSetup.printArea;
+  if(par&&typeof par==='string'){
+    var pr0=par.split(':'),pa0=addrToRC(pr0[0]),pb0=addrToRC(pr0[1]||pr0[0]);
+    if(pa0&&pb0){minR=Math.min(pa0.r,pb0.r);minC=Math.min(pa0.c,pb0.c);maxRow=Math.max(pa0.r,pb0.r);maxCol=Math.max(pa0.c,pb0.c);fixedRange=true;}
+  }
+  // 結合セル（merges）を把握（印刷範囲でクランプ）
   var spanMap={}, covered={};
   var mraw=(ws.model&&ws.model.merges)||[];
   if(!Array.isArray(mraw))mraw=Object.keys(mraw).map(function(k){return mraw[k];});
@@ -412,22 +419,23 @@ function renderPrint(ws){
     var p=rng.split(':');if(p.length<2)return;
     var a=addrToRC(p[0]),b=addrToRC(p[1]);if(!a||!b)return;
     var r1=Math.min(a.r,b.r),r2=Math.max(a.r,b.r),c1=Math.min(a.c,b.c),c2=Math.max(a.c,b.c);
-    if(r2>maxRow)maxRow=r2; if(c2>maxCol)maxCol=c2;
+    if(r1>maxRow||c1>maxCol||r2<minR||c2<minC)return;
+    if(fixedRange){if(r2>maxRow)r2=maxRow;if(c2>maxCol)c2=maxCol;}
+    else{if(r2>maxRow)maxRow=r2;if(c2>maxCol)maxCol=c2;}
     spanMap[r1+'_'+c1]={rs:r2-r1+1,cs:c2-c1+1};
     for(var rr=r1;rr<=r2;rr++)for(var cc=c1;cc<=c2;cc++){if(rr!==r1||cc!==c1)covered[rr+'_'+cc]=true;}
   });
-  // 列幅（Excelの文字幅単位→px換算）。A4縦の印刷可能幅に収まるよう全体を比例縮小
-  var widths=[],total=0;
-  for(c=1;c<=maxCol;c++){var w=ws.getColumn(c).width;if(!w||w<=0)w=8.43;var px=w*7+5;widths.push(px);total+=px;}
-  var target=720, scale=total>0?target/total:1;
-  var colHtml='';
-  for(c=0;c<maxCol;c++)colHtml+='<col style="width:'+(widths[c]*scale).toFixed(1)+'px">';
+  // 列幅・行高はExcel実寸(px)で算出（均等縮小は .xl-scale 側で吸収するため正規化しない）
+  var defColW=(ws.properties&&ws.properties.defaultColWidth)||8.43;
+  var defRowH=(ws.properties&&ws.properties.defaultRowHeight)||16.5;
+  var colHtml='',colTotal=0;
+  for(c=minC;c<=maxCol;c++){var w=ws.getColumn(c).width;if(!w||w<=0)w=defColW;var cpx=Math.round(w*7)+5;colTotal+=cpx;colHtml+='<col style="width:'+cpx+'px">';}
   var rowsHtml='';
-  for(var r=1;r<=maxRow;r++){
+  for(r=minR;r<=maxRow;r++){
     var rh=ws.getRow(r).height;
-    var hpx=(rh?rh*1.333:18)*scale;
+    var hpx=(rh||defRowH)*96/72;
     rowsHtml+='<tr style="height:'+hpx.toFixed(1)+'px">';
-    for(c=1;c<=maxCol;c++){
+    for(c=minC;c<=maxCol;c++){
       if(covered[r+'_'+c])continue;
       var cell=ws.getCell(r,c);
       var sp=spanMap[r+'_'+c];
@@ -445,10 +453,10 @@ function renderPrint(ws){
       st.push('vertical-align:'+(va==='middle'?'middle':va==='bottom'?'bottom':'top'));
       var isVert=al.textRotation==='vertical'||al.textRotation===90||al.textRotation===255;
       if(isVert){st.push('writing-mode:vertical-rl');st.push('text-orientation:upright');st.push('white-space:nowrap');}
-      else st.push('white-space:'+(al.wrapText?'normal':'pre-wrap'));
+      else st.push('white-space:'+(al.wrapText?'normal':'nowrap'));
       if(f.name)st.push('font-family:'+fontFamily(f.name));
       if(f.bold)st.push('font-weight:700');
-      var fs=(f.size||11)*scale*1.3;if(fs<6)fs=6;
+      var fs=(f.size||11)*96/72;if(fs<6)fs=6;
       st.push('font-size:'+fs.toFixed(1)+'px');
       var fl=cell.fill;
       if(fl&&fl.type==='pattern'&&fl.pattern&&fl.pattern!=='none'&&fl.fgColor&&fl.fgColor.argb){
@@ -459,18 +467,18 @@ function renderPrint(ws){
     }
     rowsHtml+='</tr>';
   }
-  var tableHtml='<table class="xl-table"><colgroup>'+colHtml+'</colgroup><tbody>'+rowsHtml+'</tbody></table>';
+  var tableHtml='<table class="xl-table" style="width:'+colTotal+'px"><colgroup>'+colHtml+'</colgroup><tbody>'+rowsHtml+'</tbody></table>';
   var pa=document.getElementById('printArea');
   pa.removeAttribute('style');
   pa.innerHTML='<div class="xl-scale">'+tableHtml+'</div>';
   // 実寸を計測（画面外に一時表示、スケール解除状態）
   pa.style.cssText='position:fixed;left:-10000px;top:0;display:block;visibility:hidden';
   var scaleEl=pa.firstElementChild, tbl=scaleEl.firstElementChild;
-  var natW=tbl.offsetWidth||720, natH=tbl.offsetHeight||1645;
-  // A4縦の印刷可能領域(@page margin 6mm時) ≈742×1066px。縦横それぞれフィットさせ全面使用
+  var natW=tbl.offsetWidth||1041, natH=tbl.offsetHeight||1447;
+  // A4縦の印刷可能領域(@page margin 6mm時) ≈742×1066px。均等縮小（歪ませない）
   var availW=742, availH=1066;
-  var sx=availW/natW, sy=availH/natH;
-  scaleEl.style.cssText='transform-origin:left top;transform:scale('+sx+','+sy+');width:'+natW+'px;height:'+natH+'px';
+  var s=Math.min(availW/natW, availH/natH);
+  scaleEl.style.cssText='transform-origin:top left;transform:scale('+s+');width:'+natW+'px;height:'+natH+'px';
   // フロー上の占有サイズを印刷領域サイズにして1ページに収める
   pa.removeAttribute('style');
   pa.style.cssText='width:'+availW+'px;height:'+availH+'px;overflow:hidden;margin:0 auto';
