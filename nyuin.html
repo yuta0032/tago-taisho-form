@@ -245,7 +245,8 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
       </div>
       <div class="field"><div class="lab">退院後の主介護者</div>
         <div class="chips" data-single data-grp="taiMain"><button class="chip" data-v="本シート２に同じ">シート2に同じ</button><button class="chip" data-v="左記以外">左記以外</button></div>
-        <input type="text" data-k="taiMainNote" placeholder="左記以外（氏名・続柄・年齢）" style="margin-top:9px">
+        <div class="mini-lab" style="margin-top:9px">左記以外の場合</div>
+        <div class="row3"><input type="text" data-k="taiMainName" placeholder="氏名"><input type="text" data-k="taiMainRel" placeholder="続柄"><input type="number" data-k="taiMainAge" inputmode="numeric" placeholder="年齢"></div>
       </div>
       <div class="field"><div class="lab">介護力<span class="tag">退院支援加算</span></div>
         <div class="chips" data-single data-grp="kaigoRyoku"><button class="chip" data-v="介護力が見込める">見込める</button><button class="chip" data-v="介護力は見込めない">見込めない</button><button class="chip" data-v="家族や支援者はいない">支援者なし</button></div>
@@ -297,7 +298,9 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
   <div class="group">
     <div class="group-title"><span class="n">7</span>食事内容</div>
     <div class="card">
-      <div class="field"><div class="lab">食事回数</div><div class="chip-extra"><input class="inline-input" type="number" data-k="mealNum" placeholder="回">回／日</div></div>
+      <div class="field"><div class="lab">食事回数</div><div class="chip-extra"><input class="inline-input" type="number" data-k="mealNum" placeholder="回">回／日</div>
+        <div class="chip-extra" style="margin-top:8px"><label>朝</label><input class="inline-input" type="number" data-k="mealAsa" placeholder="時">時頃<label style="margin-left:6px">昼</label><input class="inline-input" type="number" data-k="mealHiru" placeholder="時">時頃<label style="margin-left:6px">夜</label><input class="inline-input" type="number" data-k="mealYoru" placeholder="時">時頃</div>
+      </div>
       <div class="field"><div class="lab">食事制限</div><div class="chips" data-single data-grp="mealLimit"><button class="chip" data-v="あり">あり</button><button class="chip no" data-v="なし">なし</button><button class="chip no" data-v="不明">不明</button></div><input type="text" data-k="mealLimitNote" placeholder="あり（内容）" style="margin-top:9px"></div>
       <div class="field"><div class="lab">食事形態</div><div class="chips" data-single data-grp="mealForm"><button class="chip" data-v="普通">普通</button><button class="chip" data-v="きざみ">きざみ</button><button class="chip" data-v="嚥下障害食">嚥下障害食</button><button class="chip" data-v="ミキサー">ミキサー</button></div><input type="text" data-k="udf" placeholder="UDF等の食形態区分" style="margin-top:9px"></div>
       <div class="field"><div class="lab">摂取方法</div><div class="chips" data-single data-grp="intake"><button class="chip" data-v="経口">経口</button><button class="chip" data-v="経管栄養">経管栄養</button></div></div>
@@ -358,7 +361,8 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
       </div>
       <div class="field"><div class="lab">最近半年間での入院<span class="tag">退院支援加算</span></div>
         <div class="chips" data-single data-grp="nyuinReki"><button class="chip no" data-v="なし">なし</button><button class="chip" data-v="あり">あり</button><button class="chip no" data-v="不明">不明</button></div>
-        <input type="text" data-k="nyuinRekiNote" placeholder="あり（理由・期間）" style="margin-top:9px">
+        <input type="text" data-k="nyuinReason" placeholder="あり：理由" style="margin-top:9px">
+        <div class="row2" style="margin-top:8px"><input type="text" data-k="nyuinFrom" placeholder="期間 開始（例 R6.1.10）"><input type="text" data-k="nyuinTo" placeholder="期間 終了（例 R6.1.25）"></div>
       </div>
       <div class="field"><div class="lab">入院頻度</div><div class="chips" data-single data-grp="nyuinHindo"><button class="chip" data-v="頻度は高い／繰り返している">高い/繰返し</button><button class="chip" data-v="頻度は低いが、これまでにもある">低いがある</button><button class="chip" data-v="今回が初めて">今回が初めて</button></div></div>
       <div class="field"><div class="lab">入院前に実施している医療処置<span class="tag">退院支援加算</span></div>
@@ -463,7 +467,8 @@ function H(ws){
     mark:function(a,tokens){var s=gs(a);(tokens||[]).forEach(function(t){if(!t)return;var i=s.indexOf(t);if(i<0)return;var j=i-1;while(j>=0&&'\u25a1\u2611'.indexOf(s[j])<0){if(s[j]!==' '&&s[j]!=='\u3000')break;j--;}if(j>=0&&s[j]==='\u25a1'){s=s.slice(0,j)+'\u2611'+s.slice(j+1);}});ss(a,s);},
     fillParen:function(a,value,occ){if(value==null||value==='')return;occ=occ||0;var s=gs(a);var re=/[（(][\s\u3000]*[）)]/g;var m,arr=[];while((m=re.exec(s)))arr.push(m);if(occ<arr.length){var x=arr[occ];s=s.slice(0,x.index)+s[x.index]+value+s[x.index+x[0].length-1]+s.slice(x.index+x[0].length);ss(a,s);}},
     circle:function(a,ch){if(!ch)return;var s=gs(a);var i=s.indexOf(ch);if(i>=0)ss(a,s.slice(0,i)+'【'+ch+'】'+s.slice(i+ch.length));},
-    box:function(a){var s=gs(a).replace(/^[\s\u3000]+/,'').replace(/[\s\u3000]+$/,'');if(s)ss(a,'【'+s+'】');}
+    box:function(a){var s=gs(a).replace(/^[\s\u3000]+/,'').replace(/[\s\u3000]+$/,'');if(s)ss(a,'【'+s+'】');},
+    afterLabel:function(a,label,value){if(value==null||value==='')return;var s=gs(a);var i=s.indexOf(label);if(i<0)return;var j=i+label.length;var k=j;while(k<s.length&&(s[k]===' '||s[k]==='\u3000'))k++;var consume=Math.min(k-j,Array.from(''+value).length);ss(a,s.slice(0,j)+value+s.slice(j+consume));}
   };
 }
 
@@ -542,7 +547,7 @@ function fillWorkbook(wb){
   if(selAll('taiNicchu').length)A.mark('F43',['日中独居']);
   A.fillParen('F43', val('taiOther'), 0);
   A.mark('F44', [selOne('hairyo')]); A.fillParen('F44', val('hairyoNote'), 0);
-  A.mark('F45', [selOne('taiMain')]); A.fillParen('F45', val('taiMainNote'), 0);
+  A.mark('F45', [selOne('taiMain')]); A.afterLabel('F45','氏名',val('taiMainName')); A.afterLabel('F45','続柄',val('taiMainRel')); A.afterLabel('F45','年齢',val('taiMainAge'));
   A.mark('F46', [selOne('kaigoRyoku'), selOne('kaigoDeg')]);
   A.mark('F47', [selOne('gyakutai')]); A.fillParen('F47', val('gyakutaiNote'), 0);
   if(val('tokki5'))A.set('F48',val('tokki5'));
@@ -566,7 +571,7 @@ function fillWorkbook(wb){
   // 起居動作（Q5自立/S5見守り/U5一部/X5全）
   var kk={自立:'Q5',見守り:'S5',一部介助:'U5',全介助:'X5'}; var kkv=selOne('kikyo'); if(kkv)B.box(kk[kkv]);
   // 食事
-  B.fillParen('F9', val('mealNum'), 0);
+  B.fillParen('F9', val('mealNum'), 0); B.afterLabel('F9','朝',val('mealAsa')); B.afterLabel('F9','昼',val('mealHiru')); B.afterLabel('F9','夜',val('mealYoru'));
   B.mark('S9',[selOne('mealLimit')]); B.fillParen('S9', val('mealLimitNote'), 0);
   B.mark('F10',[selOne('mealForm')]); if(val('udf'))B.set('U10',val('udf'));
   B.mark('F11',[selOne('intake')]);
@@ -599,7 +604,12 @@ function fillWorkbook(wb){
   // 疾患歴
   B.mark('F23', selAll('shikkan')); B.fillParen('F23', val('shikkanOther'), 0);
   // 入院歴
-  B.mark('F24',[selOne('nyuinReki')]); if(selOne('nyuinReki')==='あり'&&val('nyuinRekiNote'))B.fillParen('F24', val('nyuinRekiNote'), 0);
+  B.mark('F24',[selOne('nyuinReki')]);
+  if(selOne('nyuinReki')==='あり'){
+    B.afterLabel('F24','理由：',val('nyuinReason'));
+    var pf=val('nyuinFrom'),pt=val('nyuinTo');
+    if(pf||pt){var s24=B.gs('F24');var pi=s24.indexOf('期間：');if(pi>=0){var pe=s24.indexOf('）',pi);if(pe>pi){B.set('F24',s24.slice(0,pi)+'期間： '+(pf||'　　')+' ～ '+(pt||'　　')+' '+s24.slice(pe));}}}
+  }
   B.mark('F25',[selOne('nyuinHindo')]);
   // 医療処置
   B.mark('F26', selAll('shochi'));
@@ -609,7 +619,7 @@ function fillWorkbook(wb){
   /* --- 8 お薬 --- */
   B.mark('D29',[selOne('naifuku')]); B.fillParen('D29', val('naifukuNote'), 0);
   B.mark('Q29',[selOne('kyotaku')]); if(val('kyotakuJob'))B.set('T29','（職種： '+val('kyotakuJob')+' ）');
-  B.mark('D30',[selOne('yakuzai')]); B.fillParen('D30', val('yakuzaiMgr'), 0); B.fillParen('D30', val('yakuzaiHow'), 1);
+  B.mark('D30',[selOne('yakuzai')]); B.afterLabel('D30','管理者：',val('yakuzaiMgr')); B.afterLabel('D30','管理方法：',val('yakuzaiHow'));
   B.mark('D31',[selOne('fukuyaku')]);
   if(val('medNote'))B.set('H32',val('medNote'));
 
