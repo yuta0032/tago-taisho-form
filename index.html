@@ -445,8 +445,21 @@ function renderPrint(ws){
     }
     rowsHtml+='</tr>';
   }
-  document.getElementById('printArea').innerHTML=
-    '<table class="xl-table"><colgroup>'+colHtml+'</colgroup><tbody>'+rowsHtml+'</tbody></table>';
+  var tableHtml='<table class="xl-table"><colgroup>'+colHtml+'</colgroup><tbody>'+rowsHtml+'</tbody></table>';
+  var pa=document.getElementById('printArea');
+  pa.removeAttribute('style');
+  pa.innerHTML='<div class="xl-scale">'+tableHtml+'</div>';
+  // 実寸を計測（画面外に一時表示）→ A4縦1枚に収まる倍率を算出して全体を縮小
+  pa.style.cssText='position:fixed;left:-10000px;top:0;display:block;visibility:hidden';
+  var scaleEl=pa.firstElementChild, tbl=scaleEl.firstElementChild;
+  var w=tbl.getBoundingClientRect().width||720, h=tbl.getBoundingClientRect().height||1719;
+  // A4縦の印刷可能領域(@page margin 6mm時) ≈ 748×1077px。安全側に少し小さく取る
+  var availW=742, availH=1066;
+  var s=Math.min(availW/w, availH/h, 1);
+  scaleEl.style.cssText='transform-origin:top left;transform:scale('+s+');width:'+w+'px;height:'+h+'px';
+  // フロー上の占有サイズを縮小後サイズにして1ページに収める
+  pa.removeAttribute('style');
+  pa.style.cssText='width:'+(w*s)+'px;height:'+(h*s)+'px;overflow:hidden;margin:0 auto';
 }
 
 document.getElementById('printBtn').addEventListener('click',async function(){
@@ -454,6 +467,7 @@ document.getElementById('printBtn').addEventListener('click',async function(){
   var btn=this;btn.disabled=true;var lbl=btn.textContent;btn.textContent='準備中…';
   try{
     var r=await getFilledWorkbook();
+    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready;}catch(e){}}
     renderPrint(r.ws);
     btn.disabled=false;btn.textContent=lbl;
     setTimeout(function(){window.print();},80);
