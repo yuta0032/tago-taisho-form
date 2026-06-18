@@ -471,7 +471,7 @@ function renderPrint(ws){
     }
     rowsHtml+='</tr>';
   }
-  var tableHtml='<table class="xl-table" style="width:'+colTotal+'px"><colgroup>'+colHtml+'</colgroup><tbody>'+rowsHtml+'</tbody></table>';
+  var tableHtml='<table class="xl-table" style="width:'+colTotal+'px;box-sizing:border-box;border:1.5px solid #000"><colgroup>'+colHtml+'</colgroup><tbody>'+rowsHtml+'</tbody></table>';
   var pa=document.getElementById('printArea');
   pa.removeAttribute('style');
   pa.innerHTML='<div class="xl-scale">'+tableHtml+'</div>';
