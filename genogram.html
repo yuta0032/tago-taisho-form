@@ -150,12 +150,62 @@
   .pop input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);}
 
   /* ---------- mobile ---------- */
-  @media (max-width:780px){
-    .inspector{position:absolute;right:0;top:0;height:100%;z-index:25;box-shadow:-3px 0 12px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .2s;}
-    .inspector.open{transform:translateX(0);}
-    .palette{flex-basis:172px;}
-    .grid{grid-template-columns:repeat(2,1fr);}
-    .line-list{grid-template-columns:1fr;}
+  /* ---------- mobile / tablet ---------- */
+  .insp-close{display:none;}
+  .mdock{display:none;}
+
+  @media (max-width:900px){
+    /* header compact, single horizontal scroll row */
+    header{gap:8px;padding:6px 10px;}
+    .brand{display:none;}
+    .toolbar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .tbtn{padding:7px 9px;font-size:11.5px;flex:0 0 auto;}
+
+    /* hide left palette; use bottom dock instead */
+    .palette{display:none;}
+
+    /* inspector becomes a bottom sheet */
+    .inspector{
+      position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;max-height:62vh;width:auto;
+      flex-basis:auto;border-left:none;border-top:1px solid var(--border);
+      border-radius:16px 16px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);
+      transform:translateY(100%);transition:transform .22s;z-index:45;padding:16px 16px 22px;
+    }
+    .inspector.open{transform:translateY(0);}
+    .insp-close{
+      display:flex;position:absolute;right:12px;top:10px;width:34px;height:34px;border-radius:9px;
+      border:1px solid var(--border);background:#fff;color:#555;font-size:16px;cursor:pointer;
+      align-items:center;justify-content:center;z-index:2;
+    }
+    #inspContent{padding-top:4px;}
+
+    /* bottom tool dock */
+    .mdock{
+      display:block;position:fixed;left:0;right:0;bottom:0;z-index:30;
+      background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-top:1px solid var(--border);
+      padding:6px 8px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(0,0,0,.08);
+    }
+    .mdock-tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;}
+    .mtab{
+      flex:0 0 auto;border:1px solid var(--border);background:#f4f6f9;color:#445;border-radius:18px;
+      padding:7px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;
+    }
+    .mtab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .mdock-row{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 2px;}
+    .mtile{
+      flex:0 0 auto;width:74px;min-height:74px;background:#fbfcfe;border:1px solid var(--border);border-radius:11px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:7px 4px;cursor:pointer;
+    }
+    .mtile:active{transform:scale(.94);background:var(--accent-soft);}
+    .mtile.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset;}
+    .mtile .pv{height:38px;display:flex;align-items:center;justify-content:center;}
+    .mtile .pv svg{max-height:36px;max-width:60px;width:auto;height:auto;}
+    .mtile .cap{font-size:10px;color:#333;text-align:center;line-height:1.1;}
+
+    /* lift floating controls above the dock */
+    .float-controls{bottom:128px;left:10px;}
+    .trash{bottom:130px;right:12px;}
+    .zbtn{width:42px;height:42px;}
   }
 
   /* ---------- print ---------- */
@@ -214,8 +264,15 @@
 
   <!-- Inspector -->
   <aside class="inspector" id="inspector">
+    <button class="insp-close" id="inspClose" title="閉じる" aria-label="閉じる">✕</button>
     <div id="inspContent"></div>
   </aside>
+</div>
+
+<!-- Mobile bottom tool dock -->
+<div class="mdock" id="mdock">
+  <div class="mdock-tabs" id="mdockTabs"></div>
+  <div class="mdock-row" id="mdockRow"></div>
 </div>
 
 <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
@@ -600,7 +657,7 @@
   // ===================== Palette build =====================
   function miniNode(opts){
     const n=Object.assign({x:0,y:0,label:opts.label||''},opts);
-    return `<svg viewBox="-40 -40 80 80">${shapeMarkup(n,1)}${n.type==='resource'?`<text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="15">${esc((n.label||'').slice(0,4))}</text>`:''}</svg>`;
+    return `<svg width="46" height="46" viewBox="-40 -40 80 80">${shapeMarkup(n,1)}${n.type==='resource'?`<text x="0" y="0" text-anchor="middle" dominant-baseline="central" font-size="15">${esc((n.label||'').slice(0,4))}</text>`:''}</svg>`;
   }
   function miniLine(type){
     const fake={type, from:'a', to:'b'};
@@ -617,7 +674,7 @@
       case 'separation': attrs+=' stroke-width="2"';extra=slashMarks(p1,p2,ux,uy,1);break;
       default: attrs+=' stroke-width="2"';
     }
-    return `<svg viewBox="0 0 46 18">${defsMarkup()}<line x1="4" y1="9" x2="42" y2="9" ${attrs}/>${extra}</svg>`;
+    return `<svg width="46" height="18" viewBox="0 0 46 18">${defsMarkup()}<line x1="4" y1="9" x2="42" y2="9" ${attrs}/>${extra}</svg>`;
   }
 
   function buildPalette(){
@@ -655,6 +712,30 @@
     document.getElementById('addHouse').addEventListener('click',()=>startHouseMode('new'));
   }
 
+  // ===================== Mobile bottom dock =====================
+  const MTABS=[{k:'person',l:'人物'},{k:'eco',l:'エコ'},{k:'geno',l:'続柄'},{k:'rel',l:'関係'},{k:'etc',l:'世帯・文字'}];
+  let mtab='person';
+  function renderMTabs(){
+    const t=document.getElementById('mdockTabs');
+    t.innerHTML=MTABS.map(x=>`<button class="mtab${x.k===mtab?' active':''}" data-mtab="${x.k}">${x.l}</button>`).join('');
+    t.querySelectorAll('[data-mtab]').forEach(b=>b.addEventListener('click',()=>{ mtab=b.getAttribute('data-mtab'); renderMTabs(); renderMRow(); }));
+  }
+  function renderMRow(){
+    const row=document.getElementById('mdockRow'); let h='';
+    if(mtab==='person') h=PERSON.map(p=>`<div class="mtile" data-add='${JSON.stringify(p.opts)}'><div class="pv">${miniNode(p.opts)}</div><span class="cap">${p.label}</span></div>`).join('');
+    else if(mtab==='eco') h=ECO.map(p=>`<div class="mtile" data-add='${JSON.stringify(p.opts)}'><div class="pv">${miniNode({type:'resource'})}</div><span class="cap">${p.label}</span></div>`).join('');
+    else if(mtab==='geno') h=GENO_LINES.map(l=>`<div class="mtile${l.type===lineTool?' active':''}" data-line="${l.type}"><div class="pv">${miniLine(l.type)}</div><span class="cap">${l.label}</span></div>`).join('');
+    else if(mtab==='rel') h=ECO_LINES.map(l=>`<div class="mtile${l.type===lineTool?' active':''}" data-line="${l.type}"><div class="pv">${miniLine(l.type)}</div><span class="cap">${l.label}</span></div>`).join('');
+    else h=`<div class="mtile" data-house="1"><div class="pv"><svg viewBox="0 0 46 18"><rect x="3" y="3" width="40" height="12" rx="6" fill="none" stroke="#1a1a1a" stroke-width="1.4" stroke-dasharray="4 3"/></svg></div><span class="cap">同居枠</span></div>`
+          +`<div class="mtile" data-text="1"><div class="pv"><svg viewBox="0 0 46 18"><text x="4" y="14" font-size="14" font-family="sans-serif">あ A 1</text></svg></div><span class="cap">文字</span></div>`;
+    row.innerHTML=h;
+    row.querySelectorAll('[data-add]').forEach(el=>el.addEventListener('click',()=>addNode(JSON.parse(el.getAttribute('data-add')))));
+    row.querySelectorAll('[data-line]').forEach(el=>el.addEventListener('click',()=>toggleLineTool(el.getAttribute('data-line'),el)));
+    const hb=row.querySelector('[data-house]'); if(hb) hb.addEventListener('click',()=>startHouseMode('new'));
+    const tb=row.querySelector('[data-text]'); if(tb) tb.addEventListener('click',()=>{ const c=viewportCenter(); addText(c.x,c.y); });
+  }
+  function buildMobileDock(){ renderMTabs(); renderMRow(); }
+
   // ===================== Add / edit =====================
   let cascade=0;
   function viewportCenter(){
@@ -682,7 +763,7 @@
     return phase==='start'?'始点をクリック':phase==='end'?'終点をクリック':'始点→終点をクリック';
   }
   function toggleLineTool(type,el){
-    document.querySelectorAll('.line-item').forEach(e=>e.classList.remove('active'));
+    document.querySelectorAll('.line-item,.mtile').forEach(e=>e.classList.remove('active'));
     if(lineTool===type){ lineTool=null; connectFrom=null; stage.classList.remove('connecting'); hideHint(); render(); return; }
     lineTool=type; connectFrom=null;
     el.classList.add('active');
@@ -692,7 +773,7 @@
 
   // ===================== Selection / inspector =====================
   function select(sel){ selected=sel; renderInspector(); render(); 
-    if(window.matchMedia('(max-width:780px)').matches && sel) document.getElementById('inspector').classList.add('open');
+    if(window.matchMedia('(max-width:900px)').matches && sel) document.getElementById('inspector').classList.add('open');
   }
   function deselect(){ selected=null; renderInspector(); render(); document.getElementById('inspector').classList.remove('open'); }
 
@@ -797,6 +878,26 @@
   // ===================== Pointer interaction =====================
   let drag=null;  // {kind, id, dx, dy, moved}
   let pan=null;
+  const pointers=new Map();
+  let pinch=null;
+  const _dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const _mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+  function startPinch(){
+    const v=[...pointers.values()]; const a=v[0], b=v[1];
+    const r=stage.getBoundingClientRect();
+    pinch={ d0:_dist(a,b)||1, s0:view.s, tx0:view.tx, ty0:view.ty,
+            cx0:_mid(a,b).x-r.left, cy0:_mid(a,b).y-r.top, L:r.left, T:r.top };
+  }
+  function doPinch(){
+    const v=[...pointers.values()]; const a=v[0], b=v[1]; if(!a||!b) return;
+    const ns=Math.min(3,Math.max(0.25, pinch.s0*(_dist(a,b)/pinch.d0)));
+    const k=ns/pinch.s0;
+    const m=_mid(a,b);
+    view.s=ns;
+    view.tx=(m.x-pinch.L)-(pinch.cx0-pinch.tx0)*k;
+    view.ty=(m.y-pinch.T)-(pinch.cy0-pinch.ty0)*k;
+    applyViewTransform();
+  }
 
   function toWorld(clientX,clientY){
     const r=stage.getBoundingClientRect();
@@ -804,6 +905,14 @@
   }
 
   stage.addEventListener('pointerdown',e=>{
+    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    stage.setPointerCapture(e.pointerId);
+    if(pointers.size>=2){
+      drag=null; if(pan){pan=null;stage.classList.remove('panning');}
+      document.getElementById('trash').classList.remove('hot');
+      startPinch();
+      return;
+    }
     const target=e.target.closest('[data-node],[data-edge],[data-text],[data-house]');
     const w=toWorld(e.clientX,e.clientY);
 
@@ -853,6 +962,8 @@
   });
 
   stage.addEventListener('pointermove',e=>{
+    if(pointers.has(e.pointerId)) pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pinch){ doPinch(); return; }
     if(drag){
       const w=toWorld(e.clientX,e.clientY);
       drag.moved=true;
@@ -873,6 +984,8 @@
   });
 
   stage.addEventListener('pointerup',e=>{
+    pointers.delete(e.pointerId);
+    if(pinch){ if(pointers.size<2){ pinch=null; scheduleSave(); } return; }
     if(drag){
       const tr=document.getElementById('trash');
       if(tr.classList.contains('hot')){ tr.classList.remove('hot'); delSelected(); }
@@ -881,7 +994,7 @@
     }
     if(pan){ pan=null; stage.classList.remove('panning'); }
   });
-  stage.addEventListener('pointercancel',()=>{drag=null;pan=null;stage.classList.remove('panning');});
+  stage.addEventListener('pointercancel',e=>{ pointers.delete(e.pointerId); if(pointers.size<2)pinch=null; drag=null;pan=null;stage.classList.remove('panning');});
 
   // double click text/node = focus name; double click empty = add text
   stage.addEventListener('dblclick',e=>{
@@ -994,7 +1107,15 @@
     const bb=contentBBox(); if(!bb) return null;
     const pad=40;
     const w=bb.w+pad*2, h=bb.h+pad*2;
-    const inner=`<g transform="translate(${pad-bb.minx},${pad-bb.miny})">${worldMarkup(false)}</g>`;
+    // 選択・接続・世帯選択の強調（青/緑/橙の線）は画像に含めない
+    const _sel=selected, _conn=connectFrom, _house=houseMode;
+    selected=null; connectFrom=null; houseMode=null;
+    let inner;
+    try{
+      inner=`<g transform="translate(${pad-bb.minx},${pad-bb.miny})">${worldMarkup(false)}</g>`;
+    } finally {
+      selected=_sel; connectFrom=_conn; houseMode=_house;
+    }
     return {svg:`<svg xmlns="${SVGNS}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${defsMarkup()}<rect width="${w}" height="${h}" fill="#fff"/>${inner}</svg>`, w, h};
   }
   document.getElementById('btnPng').onclick=()=>{
@@ -1036,6 +1157,8 @@
   // ===================== Init =====================
   function init(){
     buildPalette();
+    buildMobileDock();
+    document.getElementById('inspClose').addEventListener('click',deselect);
     document.getElementById('optGrid').checked=opt.grid;
     document.getElementById('optSnap').checked=opt.snap;
     const had=restore();
