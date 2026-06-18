@@ -127,7 +127,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
         </div>
       </div>
       <div class="field"><div class="lab">住所・電話</div>
-        <input type="text" data-k="zip" placeholder="〒（郵便番号）" style="margin-bottom:8px">
+        <input type="text" data-k="zip" inputmode="numeric" placeholder="〒 郵便番号（住所を自動入力）" style="margin-bottom:8px">
         <input type="text" data-k="addr" placeholder="住所" style="margin-bottom:8px">
         <input type="text" data-k="tel" placeholder="電話番号">
       </div>
@@ -440,6 +440,31 @@ function calcAgeFromBirth(){
   if(el){el.addEventListener('change',calcAgeFromBirth);el.addEventListener('input',calcAgeFromBirth);}
 });
 document.getElementById('recDate').addEventListener('change',calcAgeFromBirth);
+
+// 郵便番号→住所の自動入力（zipcloud JSONP・APIキー不要）
+var zipLastAuto='';
+function lookupZipAddr(){
+  var zEl=document.querySelector('[data-k="zip"]'); if(!zEl)return;
+  var z=(zEl.value||'').replace(/[^0-9]/g,'');
+  if(z.length!==7){lookupZipAddr._last='';return;}
+  if(lookupZipAddr._last===z)return; lookupZipAddr._last=z;
+  var cb='__zipcb'+Date.now();
+  var s=document.createElement('script');
+  window[cb]=function(data){
+    try{
+      var aEl=document.querySelector('[data-k="addr"]');
+      if(data&&data.results&&data.results[0]&&aEl){
+        var r=data.results[0];
+        var base=(r.address1||'')+(r.address2||'')+(r.address3||'');
+        if(!aEl.value||aEl.value===zipLastAuto){aEl.value=base;zipLastAuto=base;}
+      }else if(data&&!data.results){toast('住所が見つかりませんでした');}
+    }finally{try{delete window[cb];}catch(e){window[cb]=null;}if(s.parentNode)s.parentNode.removeChild(s);}
+  };
+  s.onerror=function(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);toast('住所を取得できませんでした（通信環境をご確認ください）');};
+  s.src='https://zipcloud.ibsnet.co.jp/api/search?zipcode='+z+'&callback='+cb;
+  document.body.appendChild(s);
+}
+(function(){var z=document.querySelector('[data-k="zip"]');if(z){z.addEventListener('input',lookupZipAddr);z.addEventListener('change',lookupZipAddr);}})();
 
 document.getElementById('clearBtn').addEventListener('click',function(){
   if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
