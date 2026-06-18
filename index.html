@@ -463,17 +463,17 @@ function renderPrint(ws){
   var pa=document.getElementById('printArea');
   pa.removeAttribute('style');
   pa.innerHTML='<div class="xl-scale">'+tableHtml+'</div>';
-  // 実寸を計測（画面外に一時表示）→ A4縦1枚に収まる倍率を算出して全体を縮小
+  // 実寸を計測（画面外に一時表示、スケール解除状態）
   pa.style.cssText='position:fixed;left:-10000px;top:0;display:block;visibility:hidden';
   var scaleEl=pa.firstElementChild, tbl=scaleEl.firstElementChild;
-  var w=tbl.getBoundingClientRect().width||720, h=tbl.getBoundingClientRect().height||1719;
-  // A4縦の印刷可能領域(@page margin 6mm時) ≈ 748×1077px。安全側に少し小さく取る
+  var natW=tbl.offsetWidth||720, natH=tbl.offsetHeight||1645;
+  // A4縦の印刷可能領域(@page margin 6mm時) ≈742×1066px。縦横それぞれフィットさせ全面使用
   var availW=742, availH=1066;
-  var s=Math.min(availW/w, availH/h, 1);
-  scaleEl.style.cssText='transform-origin:top left;transform:scale('+s+');width:'+w+'px;height:'+h+'px';
-  // フロー上の占有サイズを縮小後サイズにして1ページに収める
+  var sx=availW/natW, sy=availH/natH;
+  scaleEl.style.cssText='transform-origin:left top;transform:scale('+sx+','+sy+');width:'+natW+'px;height:'+natH+'px';
+  // フロー上の占有サイズを印刷領域サイズにして1ページに収める
   pa.removeAttribute('style');
-  pa.style.cssText='width:'+(w*s)+'px;height:'+(h*s)+'px;overflow:hidden;margin:0 auto';
+  pa.style.cssText='width:'+availW+'px;height:'+availH+'px;overflow:hidden;margin:0 auto';
 }
 
 document.getElementById('printBtn').addEventListener('click',async function(){
