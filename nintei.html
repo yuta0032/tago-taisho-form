@@ -70,10 +70,24 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
   <a class="home" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
   <h1>要介護・要支援認定（更新）申請書</h1>
   <div class="sub">スマホで入力 → Excel様式で出力・印刷／PDF</div>
-  <div class="datebar"><label>申請日</label><input type="date" id="appDate"></div>
 </div>
 
 <div class="wrap">
+
+  <!-- 申請日 -->
+  <div class="group">
+    <div class="group-title"><span class="n">0</span>申請日</div>
+    <div class="card">
+      <div class="field"><div class="lab">申請日（和暦）</div>
+        <div class="row3" style="align-items:center">
+          <select data-k="apEra"><option value="">元号</option><option value="令">令和</option><option value="平">平成</option><option value="昭">昭和</option><option value="大">大正</option><option value="明">明治</option></select>
+          <input type="number" data-k="apY" inputmode="numeric" placeholder="年">
+          <input type="number" data-k="apM" inputmode="numeric" placeholder="月">
+          <input type="number" data-k="apD" inputmode="numeric" placeholder="日">
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 被保険者 -->
   <div class="group">
@@ -85,7 +99,13 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
       </div>
       <div class="field"><div class="lab">性別 / 生年月日</div>
         <div class="chips" data-single data-grp="sex" style="margin-bottom:9px"><button class="chip" data-v="男">男</button><button class="chip" data-v="女">女</button></div>
-        <div><div class="mini-lab">生年月日</div><input type="date" data-k="birth"></div>
+        <div class="mini-lab">生年月日（和暦）</div>
+        <div class="row3" style="align-items:center">
+          <select data-k="bEra"><option value="">元号</option><option value="明">明治</option><option value="大">大正</option><option value="昭">昭和</option><option value="平">平成</option><option value="令">令和</option></select>
+          <input type="number" data-k="bY" inputmode="numeric" placeholder="年">
+          <input type="number" data-k="bM" inputmode="numeric" placeholder="月">
+          <input type="number" data-k="bD" inputmode="numeric" placeholder="日">
+        </div>
       </div>
       <div class="field"><div class="lab">住所・電話</div>
         <input type="text" data-k="zip" inputmode="numeric" placeholder="〒 郵便番号" style="margin-bottom:8px">
@@ -112,7 +132,16 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
           <button class="chip" data-v="要介護４">要介護4</button><button class="chip" data-v="要介護５">要介護5</button>
         </div>
         <div class="mini-lab" style="margin-top:9px">有効期間</div>
-        <div class="row2"><input type="date" data-k="validFrom"><input type="date" data-k="validTo"></div>
+        <div class="mini-lab" style="margin-top:6px">開始（和暦）</div>
+        <div class="row3" style="align-items:center">
+          <select data-k="vfEra"><option value="">元号</option><option value="令">令和</option><option value="平">平成</option></select>
+          <input type="number" data-k="vfY" inputmode="numeric" placeholder="年"><input type="number" data-k="vfM" inputmode="numeric" placeholder="月"><input type="number" data-k="vfD" inputmode="numeric" placeholder="日">
+        </div>
+        <div class="mini-lab" style="margin-top:6px">終了（和暦）</div>
+        <div class="row3" style="align-items:center">
+          <select data-k="vtEra"><option value="">元号</option><option value="令">令和</option><option value="平">平成</option></select>
+          <input type="number" data-k="vtY" inputmode="numeric" placeholder="年"><input type="number" data-k="vtM" inputmode="numeric" placeholder="月"><input type="number" data-k="vtD" inputmode="numeric" placeholder="日">
+        </div>
       </div>
     </div>
   </div>
@@ -148,7 +177,11 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
         <input type="text" data-k="hospTel" inputmode="tel" placeholder="電話番号">
       </div>
       <div class="field"><div class="lab">最終診察月</div>
-        <input type="month" data-k="lastMonth">
+        <div class="row3" style="align-items:center">
+          <select data-k="lEra"><option value="">元号</option><option value="令">令和</option><option value="平">平成</option></select>
+          <input type="number" data-k="lY" inputmode="numeric" placeholder="年">
+          <input type="number" data-k="lM" inputmode="numeric" placeholder="月">
+        </div>
       </div>
       <div class="note">注：主治医が入院先の担当医の場合は、最終診察月は申請月を記入してください。</div>
     </div>
@@ -181,6 +214,9 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
         <div style="margin-top:9px"><div class="mini-lab">立会者氏名（フリガナ）</div><input type="text" data-k="tachiaiFuri" placeholder="フリガナ" style="margin-bottom:8px"><input type="text" data-k="tachiaiName" placeholder="立会者氏名"></div>
         <div class="row2" style="margin-top:8px"><input type="text" data-k="tachiaiRel" placeholder="続柄"><input type="text" data-k="tachiaiTel" inputmode="tel" placeholder="電話番号"></div>
       </div>
+      <div class="field"><div class="lab">備考（訪問調査の連絡事項）</div>
+        <input type="text" data-k="biko" placeholder="例）毎週月曜デイ、○月×日〜△日ショート 等">
+      </div>
     </div>
   </div>
 
@@ -203,31 +239,22 @@ document.addEventListener('click',function(e){
   if(box&&box.hasAttribute('data-single')){box.querySelectorAll('.chip').forEach(function(c){if(c!==chip)c.classList.remove('on');});}
   chip.classList.toggle('on');
 });
-(function(){var d=new Date();var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');document.getElementById('appDate').value=iso;})();
+function setAppToday(){var d=new Date();function s(k,v){var e=document.querySelector('[data-k="'+k+'"]');if(e)e.value=v;}s('apEra','令');s('apY',d.getFullYear()-2018);s('apM',d.getMonth()+1);s('apD',d.getDate());}
+setAppToday();
 function val(k){var e=document.querySelector('[data-k="'+k+'"]');return e?e.value.trim():'';}
 function selOne(g){var c=document.querySelector('[data-grp="'+g+'"] .chip.on');return c?c.dataset.v:null;}
 function selAll(g){return [].slice.call(document.querySelectorAll('[data-grp="'+g+'"] .chip.on')).map(function(c){return c.dataset.v;});}
-function jpYear(iso){if(!iso)return null;var p=iso.split('-');if(p.length<3)return null;return {y:+p[0]-2018,m:+p[1],d:+p[2]};}
-// 西暦(YYYY-MM-DD)→和暦（元号境界日まで正確）
-function gregToWareki(iso){
-  if(!iso)return null;var p=iso.split('-');if(p.length<2)return null;
-  var y=+p[0],m=+p[1],d=+(p[2]||1);if(!y||!m)return null;
-  var key=y*10000+m*100+d, era, base;
-  if(key>=20190501){era='令';base=2018;}
-  else if(key>=19890108){era='平';base=1988;}
-  else if(key>=19261225){era='昭';base=1925;}
-  else if(key>=19120730){era='大';base=1911;}
-  else {era='明';base=1867;}
-  return {era:era, y:y-base, m:m, d:d, gy:y};
-}
-function warekiStr(iso){var w=gregToWareki(iso);if(!w)return '';var e={'明':'明治','大':'大正','昭':'昭和','平':'平成','令':'令和'}[w.era];return e+w.y+'年'+w.m+'月'+w.d+'日';}
+// 和暦入力（元号short→full）
+var ERAF={'令':'令和','平':'平成','昭':'昭和','大':'大正','明':'明治'};
+function wYMD(pre){return {era:val(pre+'Era'),y:val(pre+'Y'),m:val(pre+'M'),d:val(pre+'D')};}
+function warekiText(pre,withDay){var w=wYMD(pre);if(!w.era&&!w.y)return '';return (ERAF[w.era]||'')+(w.y||'')+'年'+(w.m||'')+'月'+(withDay?((w.d||'')+'日'):'');}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
 
 document.getElementById('clearBtn').addEventListener('click',function(){
   if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
   document.querySelectorAll('.chip.on').forEach(function(c){c.classList.remove('on');});
   document.querySelectorAll('input[type=text],input[type=number],textarea,select').forEach(function(i){i.value='';});
-  ['birth','validFrom','validTo','lastMonth'].forEach(function(k){var e=document.querySelector('[data-k="'+k+'"]');if(e)e.value='';});
+  setAppToday();
 });
 
 function b64ToBuf(b64){var bin=atob(b64);var len=bin.length;var u=new Uint8Array(len);for(var i=0;i<len;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
@@ -258,22 +285,20 @@ function H(ws){
 function fillWorkbook(wb){
   var A=H(wb.worksheets[0]);
 
-  // 申請日（令和）
-  var ad=jpYear(document.getElementById('appDate').value);
-  if(ad){A.set('BH3','令和');A.set('BN3',ad.y);A.set('BT3',ad.m);A.set('BZ3',ad.d);}
+  // 申請日（和暦）
+  var ad=wYMD('ap');
+  if(ad.era||ad.y){A.set('BH3',ERAF[ad.era]||'');A.set('BN3',ad.y);A.set('BT3',ad.m);A.set('BZ3',ad.d);}
 
   // 被保険者 基本
   A.setIf('T7',val('furigana'));            // フリガナ
   A.setIf('T8',val('name'));                // 氏名
   A.circle('BH9',selOne('sex'));            // 男・女
   // 生年月日（明・大・昭　　年　　月　　日 の同一セルに元号〇＋数字を差し込む）
-  var bw=gregToWareki(val('birth'));
-  if(bw){
-    A.circle('BH7',bw.era);
-    A.padBefore('BH7','年',bw.y);
-    A.padBefore('BH7','月',bw.m);
-    A.padBefore('BH7','日',bw.d);
-  }
+  var bw=wYMD('b');
+  if(bw.era)A.circle('BH7',bw.era);
+  A.padBefore('BH7','年',bw.y);
+  A.padBefore('BH7','月',bw.m);
+  A.padBefore('BH7','日',bw.d);
 
   // 住所・電話
   A.setIf('W10',val('zip'));
@@ -291,7 +316,8 @@ function fillWorkbook(wb){
 
   // 前回認定
   A.circle('AI13',selOne('careState'));
-  if(val('validFrom')||val('validTo')){A.set('T14','有効期間　　'+warekiStr(val('validFrom'))+' 〜 '+warekiStr(val('validTo')));}
+  var vf=warekiText('vf',true), vt=warekiText('vt',true);
+  if(vf||vt){A.set('T14','有効期間　　'+vf+' 〜 '+vt);}
 
   // 現在の居住地
   if(selOne('live')==='住所地以外'){A.mark('E16',['住所地以外']);A.circle('E16',selOne('liveKind'));A.fillParen('E16',val('liveOther'),0);}
@@ -305,8 +331,8 @@ function fillWorkbook(wb){
   A.setIf('W30',val('hospZip'));
   A.setIf('AD30',val('hospAddr'));
   A.setIf('BE31',val('hospTel'));
-  var lw=gregToWareki(val('lastMonth'));
-  if(lw){A.setIf('BV29',lw.y);A.setIf('BZ29',lw.m);}
+  var lw=wYMD('l');
+  A.setIf('BV29',lw.y);A.setIf('BZ29',lw.m);
 
   // 第2号
   A.setIf('O35',val('tokutei'));
@@ -321,6 +347,9 @@ function fillWorkbook(wb){
   A.setIf('AK47',val('tachiaiFuri'));
   A.setIf('BB46',val('tachiaiRel'));
   A.setIf('BO46',val('tachiaiTel'));
+
+  // 備考（訪問調査の連絡事項：R51の空白行へ）
+  A.setIf('B51',val('biko'));
 }
 
 /* ===== Excel→印刷テーブル（実証済みエンジン・1シート） ===== */
