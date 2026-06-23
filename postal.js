@@ -39,7 +39,23 @@
   function han(s) {
     return (s || '').replace(/[Ａ-Ｚａ-ｚ０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
   }
-  function normAddr(s) { return han(s).replace(/[\s　]/g, ''); }
+  // 漢数字→算用数字（postal.json と同じく「条/丁目」の直前だけ変換。千代田・四谷などは壊さない）
+  var KAN = { '〇': 0, '零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 };
+  function kan2num(s) {
+    if (/^[〇零一二三四五六七八九]+$/.test(s)) { var o = ''; for (var i = 0; i < s.length; i++) o += KAN[s[i]]; return o; }
+    var n = 0, cur = 0, has = false;
+    for (var k = 0; k < s.length; k++) {
+      var c = s[k];
+      if (c === '十') { cur = (cur || 1) * 10; n += cur; cur = 0; has = true; }
+      else if (c === '百') { cur = (cur || 1) * 100; n += cur; cur = 0; has = true; }
+      else if (KAN[c] != null) { cur = KAN[c]; has = true; }
+    }
+    n += cur; return has ? String(n) : s;
+  }
+  function normAddr(s) {
+    return han(s).replace(/[\s　]/g, '')
+      .replace(/[〇零一二三四五六七八九十百]+(?=条|丁目)/g, function (m) { return kan2num(m); });
+  }
   function digits(s) { return han(s).replace(/[^0-9]/g, ''); }
   function fmt(z) { return (z && z.length === 7) ? z.slice(0, 3) + '-' + z.slice(3) : z; }
 
