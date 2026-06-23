@@ -140,7 +140,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
     <div class="card">
       <div class="field"><div class="lab">主治医の氏名</div><input type="text" data-k="docName" placeholder="医師名"></div>
       <div class="field"><div class="lab">医療機関名</div>
-        <input type="text" data-k="hospName" placeholder="医療機関名（名称・地名で検索）" data-hosp-search data-hosp-addr="hospAddr" data-hosp-tel="hospTel">
+        <input type="text" data-k="hospName" placeholder="医療機関名（名称・地名で検索）" data-hosp-search data-hosp-addr="hospAddr" data-hosp-zip="hospZip" data-hosp-tel="hospTel">
       </div>
       <div class="field"><div class="lab">所在地・電話</div>
         <input type="text" data-k="hospZip" inputmode="numeric" placeholder="〒" style="margin-bottom:8px">
@@ -174,8 +174,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
     <div class="group-title"><span class="n">6</span>同意・訪問調査</div>
     <div class="card">
       <div class="field"><div class="lab">同意署名</div>
-        <input type="text" data-k="consentName" placeholder="被保険者氏名" style="margin-bottom:8px">
-        <input type="text" data-k="proxyName" placeholder="代筆者（代筆の場合）">
+        <div class="note" style="margin-top:0">※ 同意署名（被保険者氏名・代筆者）は手書き欄のため、入力しません。印刷後に自署してください。</div>
       </div>
       <div class="field"><div class="lab">訪問調査時の立会希望</div>
         <div class="chips" data-single data-grp="tachiai"><button class="chip no" data-v="無">無</button><button class="chip" data-v="有">有</button></div>
@@ -316,9 +315,7 @@ function fillWorkbook(wb){
   if(val('rosaiAmt'))A.fillParen('Z37',val('rosaiAmt'),1);
   if(selAll('lostCert').length)A.mark('B39',['被保険者証']);
 
-  // 同意・立会
-  A.setIf('AE44',val('consentName'));
-  A.setIf('BF44',val('proxyName'));
+  // 同意・立会（同意署名 AE44/BF44 は手書き専用のため書き込まない）
   var ta=selOne('tachiai'); if(ta)A.mark(ta==='無'?'O46':'V46',[ta]);
   A.setIf('AK46',val('tachiaiName'));
   A.setIf('AK47',val('tachiaiFuri'));

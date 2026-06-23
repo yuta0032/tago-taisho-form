@@ -75,9 +75,10 @@
       if (t) { t.value = v; t.dispatchEvent(new Event('input', { bubbles: true })); }
     }
     function pick(rec) {
-      input.value = rec[0];          // rec = [名称, フリガナ, 所在地, 電話?]
+      input.value = rec[0];          // rec = [名称, フリガナ, 所在地, 〒?, 電話?]
       fillTarget(opts.addr, rec[2]);  // 所在地
-      if (rec.length > 3) fillTarget(opts.tel, rec[3]); // 電話（データにあれば）
+      fillTarget(opts.zip, rec[3]);   // 郵便番号（データにあれば）
+      fillTarget(opts.tel, rec[4]);   // 電話（データにあれば）
       hide();
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -135,6 +136,7 @@
     [].forEach.call(nodes, function (el) {
       attach(el, {
         addr: el.getAttribute('data-hosp-addr') || '',
+        zip: el.getAttribute('data-hosp-zip') || '',
         tel: el.getAttribute('data-hosp-tel') || ''
       });
     });
