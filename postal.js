@@ -114,6 +114,10 @@
     if (addrFields.length || zipFields.length) setInterval(reconcile, 500);
   }
   window.lookupPostal = addrToZip;
+  // データ未ロードでも解決を待って住所→〒を返す（病院選択時の即時反映用）
+  window.lookupPostalAsync = function (addr) {
+    return load().then(function () { return addrToZip(addr); }).catch(function () { return ''; });
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

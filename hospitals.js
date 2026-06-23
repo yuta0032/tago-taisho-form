@@ -79,6 +79,11 @@
       fillTarget(opts.addr, rec[2]);  // 所在地
       fillTarget(opts.zip, rec[3]);   // 郵便番号（データにあれば）
       fillTarget(opts.tel, rec[4]);   // 電話（データにあれば）
+      // データに〒が無くても、住所から即時に郵便番号を引いて反映する
+      if (opts.zip && rec[2] && (rec[3] == null || rec[3] === '') &&
+          typeof window.lookupPostalAsync === 'function') {
+        window.lookupPostalAsync(rec[2]).then(function (z) { if (z) fillTarget(opts.zip, z); });
+      }
       hide();
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
