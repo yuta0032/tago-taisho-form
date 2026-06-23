@@ -78,6 +78,8 @@
 
   function init() {
     [].forEach.call(document.querySelectorAll('input[data-zip-lookup]'), attach);
+    // 住所入力時に即引けるよう、郵便番号マスタを先読み（失敗しても無視）
+    load().catch(function () {});
   }
   window.lookupPostal = lookup;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
