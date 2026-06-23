@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#eef1f5; --ink:#1d2733; --muted:#5b6877; --line:#dde3ea;
-    --teal:#0d8f7e; --teal-d:#0a6e61; --blue:#34507c; --blue-d:#2b4368; --amber:#b9772a; --amber-d:#8f5a1d; --purple:#6d5bd0; --purple-d:#4f3fae; --rose:#c0497a; --rose-d:#9c3760;
+    --teal:#0d8f7e; --teal-d:#0a6e61; --blue:#34507c; --blue-d:#2b4368; --amber:#b9772a; --amber-d:#8f5a1d; --purple:#6d5bd0; --purple-d:#4f3fae; --rose:#c0497a; --rose-d:#9c3760; --slate:#4a8aa6; --slate-d:#356179;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;min-height:100%;}
@@ -47,6 +47,7 @@
   .card.n .ribbon{background:linear-gradient(90deg,var(--amber),var(--amber-d));}
   .card.p .ribbon{background:linear-gradient(90deg,var(--purple),var(--purple-d));}
   .card.r .ribbon{background:linear-gradient(90deg,var(--rose),var(--rose-d));}
+  .card.s .ribbon{background:linear-gradient(90deg,var(--slate),var(--slate-d));}
   .card .ico{
     width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:6px 0 14px;
   }
@@ -55,6 +56,7 @@
   .card.n .ico{background:#f6ecda;color:var(--amber-d);}
   .card.p .ico{background:#eae6fa;color:var(--purple-d);}
   .card.r .ico{background:#f7e4ec;color:var(--rose-d);}
+  .card.s .ico{background:#e2eef4;color:var(--slate-d);}
   .card .ico svg{width:30px;height:30px;}
   .card h2{margin:0 0 6px;font-size:16.5px;font-weight:700;line-height:1.35;}
   .card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.6;flex:1;}
@@ -66,6 +68,7 @@
   .card.n .go{color:var(--amber-d);}
   .card.p .go{color:var(--purple-d);}
   .card.r .go{color:var(--rose-d);}
+  .card.s .go{color:var(--slate-d);}
   .card .go svg{width:15px;height:15px;}
 
   .foot{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;}
@@ -141,6 +144,18 @@
       </span>
       <h2>要介護・要支援認定（変更）申請書</h2>
       <p>要介護・要支援認定の変更申請書を入力して、Excel様式での出力・印刷／PDF化ができます。</p>
+      <span class="go">ひらく
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
+
+    <a class="card s" href="kinkyu.html">
+      <span class="ribbon"></span>
+      <span class="ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15.5 10.5a6.5 6.5 0 0 0-7 0M17.8 7.7a10 10 0 0 0-11.6 0" stroke-linecap="round"/><path d="M6.6 13.2c.5-.5 1.2-.6 1.8-.3l1.7.9c.5.3.8.9.7 1.5l-.2 1c1 1.2 2.2 2.1 3.6 2.7l.8-.7c.4-.4 1-.5 1.6-.3l1.8.6c.6.2 1 .8 1 1.5 0 1.2-1 2.2-2.2 2-5-.6-9-4.6-9.6-9.6-.1-1 .4-1.9 1.2-2.5z"/></svg>
+      </span>
+      <h2>緊急時の連絡先</h2>
+      <p>緊急連絡先とかかりつけ医を入力して、Excel様式での出力・印刷／PDF化ができます。</p>
       <span class="go">ひらく
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </span>

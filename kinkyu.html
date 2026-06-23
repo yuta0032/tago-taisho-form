@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>緊急時の連絡先</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="hospitals.js" defer></script>
+<style>
+:root{
+  --bg:#eef1f4;--card:#fff;--line:#dde3ea;--ink:#1d2733;--ink2:#5a6877;--muted:#8b97a5;
+  --teal:#0d8f7e;--teal-d:#0a6e61;--teal-soft:#d8f3ee;--teal-line:#67c5b6;
+  --shadow:0 1px 2px rgba(20,40,60,.05),0 6px 18px rgba(20,40,60,.06);--r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;padding-bottom:140px;-webkit-text-size-adjust:100%}
+.topbar{background:linear-gradient(180deg,#0d8f7e,#0a6e61);color:#fff;
+  padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));box-shadow:0 2px 10px rgba(10,80,70,.25)}
+.topbar .home{display:inline-flex;align-items:center;gap:5px;color:#fff;text-decoration:none;font-size:12px;opacity:.92;margin-bottom:7px}
+.topbar .home svg{width:15px;height:15px}
+.topbar h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.02em}
+.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+.wrap{max-width:560px;margin:0 auto;padding:14px 12px}
+.group{margin-top:18px}
+.group-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--teal-d);margin:0 6px 8px;letter-spacing:.03em}
+.group-title .n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:7px;background:var(--teal);color:#fff;font-size:12px;font-weight:700;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
+.field{padding:13px 14px;border-top:1px solid var(--line)}
+.field:first-child{border-top:0}
+.field>.lab{font-size:12.5px;font-weight:700;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-bottom:9px;flex-wrap:wrap}
+.row2{display:flex;gap:10px}
+.row2>*{flex:1;min-width:0}
+input[type=text],input[type=tel],textarea{width:100%;border:1px solid var(--line);background:#fbfcfd;border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus{border-color:var(--teal-line);box-shadow:0 0 0 3px rgba(13,143,126,.14);background:#fff}
+textarea{resize:vertical;min-height:60px;line-height:1.6}
+.mini-lab{font-size:11px;color:var(--muted);margin:0 0 4px}
+.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.actionbar .inner{display:flex;gap:10px;max-width:560px;margin:0 auto}
+.btn{flex:1;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .1s,filter .15s}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.6}
+.btn-excel{background:#157347;color:#fff;box-shadow:0 4px 12px rgba(21,115,71,.3)}
+.btn-print{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(13,143,126,.3)}
+.btn-ghost{background:#eef1f4;color:var(--ink2);flex:0 0 auto;padding:14px 16px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:#1d2733;color:#fff;font-size:13px;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:84%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== 印刷プレビュー（A4・Word様式の再現） ===== */
+#printArea{display:none}
+.kk-page{background:#fff;color:#000;width:198mm;margin:0 auto;
+  font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","MS PGothic",sans-serif}
+.kk-title{text-align:center;font-size:24pt;font-weight:700;letter-spacing:.3em;margin:4mm 0 2mm}
+.kk-self{font-size:12pt;text-align:right;margin:0 1mm 4mm 0}
+.kk-self b{font-weight:500}
+.kk-self .nm{display:inline-block;min-width:60mm;border-bottom:0;padding-left:3mm}
+.kk-table{border-collapse:collapse;table-layout:fixed;width:178mm;margin:0 auto;font-size:12pt}
+.kk-table td{border:1px solid #000;padding:1.5mm 2mm;vertical-align:middle;word-break:break-word;line-height:1.35}
+.kk-table .sec{text-align:center;font-weight:700;font-size:12pt}
+.kk-table .lbl{text-align:center}
+.kk-table .val{font-size:12pt}
+.kk-table .reln{font-size:11pt}
+.kk-table .reln .rl{font-size:9pt;color:#000;display:block;margin-bottom:1mm}
+
+@media print{
+  @page{size:A4 portrait;margin:9mm}
+  html,body{background:#fff;padding:0;margin:0}
+  .topbar,.wrap,.actionbar,.toast{display:none!important}
+  #printArea{display:block!important}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="home" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
+  <h1>緊急時の連絡先</h1>
+  <div class="sub">スマホで入力 → Excel様式で出力・印刷／PDF</div>
+</div>
+
+<div class="wrap">
+
+  <!-- 本人 -->
+  <div class="group">
+    <div class="group-title"><span class="n">本人</span>ご本人</div>
+    <div class="card">
+      <div class="field"><div class="lab">本人氏名</div><input type="text" data-k="self" placeholder="氏名"></div>
+    </div>
+  </div>
+
+  <!-- 連絡先① -->
+  <div class="group">
+    <div class="group-title"><span class="n">①</span>連絡先①</div>
+    <div class="card">
+      <div class="field"><div class="lab">氏名・続柄</div>
+        <div class="row2">
+          <input type="text" data-k="c1name" placeholder="氏名">
+          <input type="text" data-k="c1rel" placeholder="続柄">
+        </div>
+      </div>
+      <div class="field"><div class="lab">住所</div><input type="text" data-k="c1addr" placeholder="住所"></div>
+      <div class="field"><div class="lab">電話番号</div><input type="tel" data-k="c1tel" inputmode="tel" placeholder="000-0000-0000"></div>
+    </div>
+  </div>
+
+  <!-- 連絡先② -->
+  <div class="group">
+    <div class="group-title"><span class="n">②</span>連絡先②</div>
+    <div class="card">
+      <div class="field"><div class="lab">氏名・続柄</div>
+        <div class="row2">
+          <input type="text" data-k="c2name" placeholder="氏名">
+          <input type="text" data-k="c2rel" placeholder="続柄">
+        </div>
+      </div>
+      <div class="field"><div class="lab">住所</div><input type="text" data-k="c2addr" placeholder="住所"></div>
+      <div class="field"><div class="lab">電話番号</div><input type="tel" data-k="c2tel" inputmode="tel" placeholder="000-0000-0000"></div>
+    </div>
+  </div>
+
+  <!-- かかりつけ医 -->
+  <div class="group">
+    <div class="group-title"><span class="n">医</span>かかりつけ医</div>
+    <div class="card">
+      <div class="field"><div class="lab">医療機関名</div>
+        <input type="text" data-k="kmed" placeholder="医療機関名（名称・地名で検索）" data-hosp-search data-hosp-tel="ktel">
+      </div>
+      <div class="field"><div class="lab">医師氏名</div><input type="text" data-k="kname" placeholder="氏名"></div>
+      <div class="field"><div class="lab">電話番号</div><input type="tel" data-k="ktel" inputmode="tel" placeholder="000-0000-0000"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="actionbar"><div class="inner">
+  <button class="btn btn-ghost" id="clearBtn">クリア</button>
+  <button class="btn btn-print" id="printBtn">印刷/PDF</button>
+  <button class="btn btn-excel" id="excelBtn">Excel出力</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<!-- 印刷プレビュー領域 -->
+<div id="printArea"><div class="kk-page">
+  <div class="kk-title">緊急時の連絡先</div>
+  <div class="kk-self"><b>本人氏名</b>　<span class="nm" id="p_self"></span></div>
+  <table class="kk-table">
+    <colgroup><col style="width:18.3%"><col style="width:18.3%"><col style="width:47.9%"><col style="width:15.5%"></colgroup>
+    <tr style="height:14mm"><td class="sec" rowspan="3">連絡先①</td><td class="lbl">氏　名</td><td class="val" id="p_c1name"></td><td class="reln"><span class="rl">続柄</span><span id="p_c1rel"></span></td></tr>
+    <tr style="height:20mm"><td class="lbl">住　所</td><td class="val" colspan="2" id="p_c1addr"></td></tr>
+    <tr style="height:14mm"><td class="lbl">電話番号</td><td class="val" colspan="2" id="p_c1tel"></td></tr>
+    <tr style="height:14mm"><td class="sec" rowspan="3">連絡先②</td><td class="lbl">氏　名</td><td class="val" id="p_c2name"></td><td class="reln"><span class="rl">続柄</span><span id="p_c2rel"></span></td></tr>
+    <tr style="height:20mm"><td class="lbl">住　所</td><td class="val" colspan="2" id="p_c2addr"></td></tr>
+    <tr style="height:14mm"><td class="lbl">電話番号</td><td class="val" colspan="2" id="p_c2tel"></td></tr>
+    <tr style="height:18mm"><td class="sec" rowspan="3">かかりつけ医</td><td class="lbl">医療機関名</td><td class="val" colspan="2" id="p_kmed"></td></tr>
+    <tr style="height:18mm"><td class="lbl">氏　名</td><td class="val" colspan="2" id="p_kname"></td></tr>
+    <tr style="height:18mm"><td class="lbl">電話番号</td><td class="val" colspan="2" id="p_ktel"></td></tr>
+  </table>
+</div></div>
+
+<script>
+function val(k){var e=document.querySelector('[data-k="'+k+'"]');return e?e.value.trim():'';}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2600);}
+
+var FIELDS=['self','c1name','c1rel','c1addr','c1tel','c2name','c2rel','c2addr','c2tel','kmed','kname','ktel'];
+
+function fillPrint(){
+  FIELDS.forEach(function(k){var el=document.getElementById('p_'+k);if(el)el.textContent=val(k);});
+}
+
+document.getElementById('printBtn').addEventListener('click',function(){
+  fillPrint();
+  setTimeout(function(){window.print();},60);
+});
+
+document.getElementById('clearBtn').addEventListener('click',function(){
+  if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
+  document.querySelectorAll('input,textarea').forEach(function(i){i.value='';});
+});
+
+/* ===== Excel出力（ExcelJSで様式を生成） ===== */
+function setBorder(cell){cell.border={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};}
+document.getElementById('excelBtn').addEventListener('click',async function(){
+  var btn=this;btn.disabled=true;
+  try{
+    var wb=new ExcelJS.Workbook();
+    var ws=wb.addWorksheet('緊急時の連絡先',{pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:1,margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2}}});
+    ws.columns=[{width:13},{width:13},{width:34},{width:11}];
+    // タイトル
+    ws.mergeCells('A1:D1');
+    var t=ws.getCell('A1');t.value='緊急時の連絡先';t.font={size:20,bold:true};t.alignment={horizontal:'center',vertical:'middle'};
+    ws.getRow(1).height=34;
+    // 本人氏名
+    ws.mergeCells('A2:D2');
+    var s=ws.getCell('A2');s.value='本人氏名　'+val('self');s.alignment={horizontal:'right',vertical:'middle'};s.font={size:11};
+    ws.getRow(2).height=22;
+    // 表データ
+    function L(addr,txt){var c=ws.getCell(addr);c.value=txt;c.alignment={horizontal:'center',vertical:'middle'};c.font={size:11};setBorder(c);}
+    function V(addr,txt){var c=ws.getCell(addr);c.value=txt;c.alignment={horizontal:'left',vertical:'middle',wrapText:true};c.font={size:11};setBorder(c);}
+    function blocks(startRow,sec,n,med){
+      var r=startRow;
+      // セクション縦結合 A
+      ws.mergeCells('A'+r+':A'+(r+2));
+      var a=ws.getCell('A'+r);a.value=sec;a.alignment={horizontal:'center',vertical:'middle',wrapText:true};a.font={size:11,bold:true};
+      if(med){
+        L('B'+r,'医療機関名');ws.mergeCells('C'+r+':D'+r);V('C'+r,val(n+'med'));
+        L('B'+(r+1),'氏　名');ws.mergeCells('C'+(r+1)+':D'+(r+1));V('C'+(r+1),val(n+'name'));
+        L('B'+(r+2),'電話番号');ws.mergeCells('C'+(r+2)+':D'+(r+2));V('C'+(r+2),val(n+'tel'));
+      }else{
+        L('B'+r,'氏　名');V('C'+r,val(n+'name'));
+        var d=ws.getCell('D'+r);d.value={richText:[{text:'続柄  ',font:{size:9}},{text:val(n+'rel'),font:{size:11}}]};d.alignment={horizontal:'left',vertical:'middle',wrapText:true};setBorder(d);
+        L('B'+(r+1),'住　所');ws.mergeCells('C'+(r+1)+':D'+(r+1));V('C'+(r+1),val(n+'addr'));
+        L('B'+(r+2),'電話番号');ws.mergeCells('C'+(r+2)+':D'+(r+2));V('C'+(r+2),val(n+'tel'));
+      }
+      // セクション側の枠（A列）
+      setBorder(ws.getCell('A'+r));
+      [r,r+1,r+2].forEach(function(rr){ws.getRow(rr).height=30;});
+    }
+    blocks(3,'連絡先①','c1',false);
+    blocks(6,'連絡先②','c2',false);
+    blocks(9,'かかりつけ医','k',true);
+    ws.pageSetup.printArea='A1:D11';
+
+    var buf=await wb.xlsx.writeBuffer();
+    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var nm=val('self')?('緊急時の連絡先_'+val('self')):'緊急時の連絡先';
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm+'.xlsx';
+    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast('Excelを出力しました');
+  }catch(e){toast('Excel出力に失敗しました');console.error(e);}
+  finally{btn.disabled=false;}
+});
+</script>
+</body>
+</html>
