@@ -97,27 +97,40 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
   <a class="home" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
   <h1>入院時情報提供書</h1>
   <div class="sub">スマホで入力 → Excel様式で出力・印刷／PDF</div>
-  <div class="datebar"><label>記入日</label>
-    <select class="wsel" id="recEra"><option value="令">令和</option><option value="平">平成</option><option value="昭">昭和</option></select>
-    <input class="wnum" type="number" inputmode="numeric" id="recY" placeholder="年"><span class="wu">年</span>
-    <input class="wnum" type="number" inputmode="numeric" id="recM" placeholder="月"><span class="wu">月</span>
-    <input class="wnum" type="number" inputmode="numeric" id="recD" placeholder="日"><span class="wu">日</span>
-  </div>
-  <div class="datebar"><label>入院日</label>
-    <select class="wsel" id="nyuEra"><option value="令">令和</option><option value="平">平成</option><option value="昭">昭和</option></select>
-    <input class="wnum" type="number" inputmode="numeric" id="nyuY" placeholder="年"><span class="wu">年</span>
-    <input class="wnum" type="number" inputmode="numeric" id="nyuM" placeholder="月"><span class="wu">月</span>
-    <input class="wnum" type="number" inputmode="numeric" id="nyuD" placeholder="日"><span class="wu">日</span>
-  </div>
-  <div class="datebar"><label>情報提供日</label>
-    <select class="wsel" id="infoEra"><option value="令">令和</option><option value="平">平成</option><option value="昭">昭和</option></select>
-    <input class="wnum" type="number" inputmode="numeric" id="infoY" placeholder="年"><span class="wu">年</span>
-    <input class="wnum" type="number" inputmode="numeric" id="infoM" placeholder="月"><span class="wu">月</span>
-    <input class="wnum" type="number" inputmode="numeric" id="infoD" placeholder="日"><span class="wu">日</span>
-  </div>
 </div>
 
 <div class="wrap">
+
+  <!-- 日付 -->
+  <div class="group">
+    <div class="group-title"><span class="n">日</span>日付</div>
+    <div class="card">
+      <div class="field"><div class="lab">記入日</div>
+        <div class="row3">
+          <select id="recEra"><option value="">元号</option><option value="令">令和</option><option value="平">平成</option><option value="昭">昭和</option></select>
+          <input type="number" inputmode="numeric" id="recY" placeholder="年">
+          <input type="number" inputmode="numeric" id="recM" placeholder="月">
+          <input type="number" inputmode="numeric" id="recD" placeholder="日">
+        </div>
+      </div>
+      <div class="field"><div class="lab">入院日</div>
+        <div class="row3">
+          <select id="nyuEra"><option value="">元号</option><option value="令">令和</option><option value="平">平成</option><option value="昭">昭和</option></select>
+          <input type="number" inputmode="numeric" id="nyuY" placeholder="年">
+          <input type="number" inputmode="numeric" id="nyuM" placeholder="月">
+          <input type="number" inputmode="numeric" id="nyuD" placeholder="日">
+        </div>
+      </div>
+      <div class="field"><div class="lab">情報提供日</div>
+        <div class="row3">
+          <select id="infoEra"><option value="">元号</option><option value="令">令和</option><option value="平">平成</option><option value="昭">昭和</option></select>
+          <input type="number" inputmode="numeric" id="infoY" placeholder="年">
+          <input type="number" inputmode="numeric" id="infoM" placeholder="月">
+          <input type="number" inputmode="numeric" id="infoD" placeholder="日">
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 自事業所（提供元）※初回のみ入力・自動保存 -->
   <div class="group">
