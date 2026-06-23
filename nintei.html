@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="hospitals.js" defer></script>
+<script src="postal.js" defer></script>
 <style>
 :root{--bg:#eef1f4;--card:#fff;--line:#dde3ea;--ink:#1d2733;--ink2:#5a6877;--muted:#8b97a5;
   --teal:#0d8f7e;--teal-d:#0a6e61;--teal-soft:#d8f3ee;--teal-line:#67c5b6;--shadow:0 1px 2px rgba(20,40,60,.05),0 6px 18px rgba(20,40,60,.06);--r:14px;}
@@ -109,7 +110,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
       </div>
       <div class="field"><div class="lab">住所・電話</div>
         <input type="text" data-k="zip" inputmode="numeric" placeholder="〒 郵便番号" style="margin-bottom:8px">
-        <input type="text" data-k="addr" placeholder="住所" style="margin-bottom:8px">
+        <input type="text" data-k="addr" placeholder="住所" data-zip-lookup data-zip-target="zip" style="margin-bottom:8px">
         <input type="text" data-k="tel" inputmode="tel" placeholder="電話番号">
       </div>
       <div class="field"><div class="lab">被保険者番号</div><input type="text" data-k="hihoNo" inputmode="numeric" placeholder="被保険者番号（10桁）"></div>
@@ -173,7 +174,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
       </div>
       <div class="field"><div class="lab">所在地・電話</div>
         <input type="text" data-k="hospZip" inputmode="numeric" placeholder="〒" style="margin-bottom:8px">
-        <input type="text" data-k="hospAddr" placeholder="所在地" style="margin-bottom:8px">
+        <input type="text" data-k="hospAddr" placeholder="所在地" data-zip-lookup data-zip-target="hospZip" style="margin-bottom:8px">
         <input type="text" data-k="hospTel" inputmode="tel" placeholder="電話番号">
       </div>
       <div class="field"><div class="lab">最終診察月</div>
