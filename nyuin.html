@@ -132,7 +132,12 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
         </div>
       </div>
       <div class="field"><div class="lab">生年月日</div>
-        <input type="date" data-k="birth" id="birth">
+        <div class="row3">
+          <select data-k="era"><option value="">元号</option><option>明</option><option>大</option><option>昭</option><option>平</option><option>令</option></select>
+          <input type="number" data-k="by" inputmode="numeric" placeholder="年">
+          <input type="number" data-k="bm" inputmode="numeric" placeholder="月">
+          <input type="number" data-k="bd" inputmode="numeric" placeholder="日">
+        </div>
       </div>
       <div class="field"><div class="lab">住所・電話</div>
         <input type="text" data-k="zip" inputmode="numeric" placeholder="〒 郵便番号（住所を自動入力）" style="margin-bottom:8px">
@@ -429,30 +434,24 @@ function selAll(g){return [].slice.call(document.querySelectorAll('[data-grp="'+
 function jpDate(iso){if(!iso)return '';var p=iso.split('-');if(p.length<3)return '';var y=+p[0];return '令和'+(y-2018)+'年'+(+p[1])+'月'+(+p[2])+'日';}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
 
-// 生年月日（カレンダー選択 type=date）→ 和暦変換 & 記入日基準の年齢を自動算出
-function gregToWareki(iso){
-  if(!iso)return null;
-  var p=iso.split('-');if(p.length<3)return null;
-  var y=+p[0],m=+p[1],d=+p[2];if(!y||!m||!d)return null;
-  var key=y*10000+m*100+d, era, base;
-  if(key>=20190501){era='令';base=2018;}        // 令和: 2019-05-01〜
-  else if(key>=19890108){era='平';base=1988;}    // 平成: 1989-01-08〜
-  else if(key>=19261225){era='昭';base=1925;}    // 昭和: 1926-12-25〜
-  else if(key>=19120730){era='大';base=1911;}    // 大正: 1912-07-30〜
-  else {era='明';base=1867;}                      // 明治
-  return {era:era, y:y-base, m:m, d:d, gy:y};
-}
+// 生年月日（元号+年月日）から記入日基準の年齢を算出して自動入力
+function eraBaseYear(e){return {'明':1867,'大':1911,'昭':1925,'平':1988,'令':2018}[e];}
 function calcAgeFromBirth(){
-  var w=gregToWareki(val('birth'));if(!w)return;
+  var base=eraBaseYear(val('era'));
+  var by=parseInt(val('by'),10),bm=parseInt(val('bm'),10),bd=parseInt(val('bd'),10);
+  if(!base||!by||!bm||!bd)return; // 生年月日が未入力／不完全
   var rec=document.getElementById('recDate').value;if(!rec)return;
   var rp=rec.split('-');if(rp.length<3)return;
   var ry=+rp[0],rm=+rp[1],rd=+rp[2];
-  var age=ry-w.gy;
-  if(rm<w.m||(rm===w.m&&rd<w.d))age--; // 誕生日未到来なら1引く
+  var age=ry-(base+by);
+  if(rm<bm||(rm===bm&&rd<bd))age--; // 誕生日未到来なら1引く
   if(age<0||age>130)return; // 異常値は無視
   var el=document.querySelector('[data-k="age"]');if(el)el.value=age;
 }
-(function(){var el=document.querySelector('[data-k="birth"]');if(el){el.addEventListener('change',calcAgeFromBirth);el.addEventListener('input',calcAgeFromBirth);}})();
+['era','by','bm','bd'].forEach(function(k){
+  var el=document.querySelector('[data-k="'+k+'"]');
+  if(el){el.addEventListener('change',calcAgeFromBirth);el.addEventListener('input',calcAgeFromBirth);}
+});
 document.getElementById('recDate').addEventListener('change',calcAgeFromBirth);
 
 // 郵便番号→住所の自動入力（zipcloud JSONP・APIキー不要）
@@ -484,7 +483,6 @@ document.getElementById('clearBtn').addEventListener('click',function(){
   if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
   document.querySelectorAll('.chip.on').forEach(function(c){c.classList.remove('on');});
   document.querySelectorAll('input[type=text],input[type=number],textarea,select').forEach(function(i){i.value='';});
-  var bdEl=document.getElementById('birth');if(bdEl)bdEl.value='';
   if(window.__restoreOffice)window.__restoreOffice();
 });
 
@@ -538,11 +536,9 @@ function fillWorkbook(wb){
   if(val('name'))A.set('F17',val('name'));
   if(val('age'))A.set('R16','　'+val('age')+'才');
   A.circle('W16', selOne('sex'));
-  var bw=gregToWareki(val('birth'));
-  if(bw){
-    A.circle('R17', bw.era);
-    A.set('V17','　'+bw.y+'年　'+bw.m+'月　'+bw.d+'日 生');
-  }
+  var era=val('era');
+  if(era){A.circle('R17',era.charAt(0));}
+  if(val('by')||val('bm')||val('bd'))A.set('V17','　'+(val('by')||'　')+'年　'+(val('bm')||'　')+'月　'+(val('bd')||'　')+'日 生');
   if(val('zip'))A.set('F18','〒'+val('zip'));
   if(val('addr'))A.set('H18',val('addr'));
   if(val('tel'))A.set('S18',val('tel'));
