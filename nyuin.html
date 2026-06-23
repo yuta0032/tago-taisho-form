@@ -91,6 +91,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
   <div class="sub">スマホで入力 → Excel様式で出力・印刷／PDF</div>
   <div class="datebar"><label>記入日</label><input type="date" id="recDate"></div>
   <div class="datebar"><label>入院日</label><input type="date" id="nyuinDate"></div>
+  <div class="datebar"><label>情報提供日</label><input type="date" id="infoDate"></div>
 </div>
 
 <div class="wrap">
@@ -424,7 +425,7 @@ document.addEventListener('click',function(e){
   if(box&&box.hasAttribute('data-single')){box.querySelectorAll('.chip').forEach(function(c){if(c!==chip)c.classList.remove('on');});}
   chip.classList.toggle('on');
 });
-(function(){var d=new Date();var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');document.getElementById('recDate').value=iso;})();
+(function(){var d=new Date();var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');document.getElementById('recDate').value=iso;document.getElementById('infoDate').value=iso;})();
 
 function val(k){var e=document.querySelector('[data-k="'+k+'"]');return e?e.value.trim():'';}
 function selOne(g){var c=document.querySelector('[data-grp="'+g+'"] .chip.on');return c?c.dataset.v:null;}
@@ -517,6 +518,7 @@ function fillWorkbook(wb){
   /* --- 見本データの初期化 --- */
   A.set('V1','記入日：　'+jpDate(document.getElementById('recDate').value));
   A.set('V2','入院日：　'+jpDate(document.getElementById('nyuinDate').value));
+  A.set('W3', jpDate(document.getElementById('infoDate').value)); // 情報提供日（テンプレの=TODAY()を上書き）
   A.set('F21', A.gs('F21').replace(/\u2611/g,'\u25a1').replace('要介護（　2　）','要介護（　　）'));
   A.set('F19', A.gs('F19').replace('　2　階建て','　　階建て'));
 
