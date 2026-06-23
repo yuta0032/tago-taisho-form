@@ -69,12 +69,15 @@
     var items = [], active = -1, truncated = false;
 
     function hide() { box.style.display = 'none'; active = -1; }
+    function fillTarget(k, v) {
+      if (!k || v == null || v === '') return;
+      var t = document.querySelector('[data-k="' + k + '"]');
+      if (t) { t.value = v; t.dispatchEvent(new Event('input', { bubbles: true })); }
+    }
     function pick(rec) {
-      input.value = rec[0];
-      if (opts.addr) {
-        var t = document.querySelector('[data-k="' + opts.addr + '"]');
-        if (t && !t.value) t.value = rec[2];
-      }
+      input.value = rec[0];          // rec = [名称, フリガナ, 所在地, 電話?]
+      fillTarget(opts.addr, rec[2]);  // 所在地
+      if (rec.length > 3) fillTarget(opts.tel, rec[3]); // 電話（データにあれば）
       hide();
       input.dispatchEvent(new Event('input', { bubbles: true }));
       input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -130,7 +133,10 @@
   function init() {
     var nodes = document.querySelectorAll('input[data-hosp-search]');
     [].forEach.call(nodes, function (el) {
-      attach(el, { addr: el.getAttribute('data-hosp-addr') || '' });
+      attach(el, {
+        addr: el.getAttribute('data-hosp-addr') || '',
+        tel: el.getAttribute('data-hosp-tel') || ''
+      });
     });
   }
 

@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#eef1f5; --ink:#1d2733; --muted:#5b6877; --line:#dde3ea;
-    --teal:#0d8f7e; --teal-d:#0a6e61; --blue:#34507c; --blue-d:#2b4368; --amber:#b9772a; --amber-d:#8f5a1d;
+    --teal:#0d8f7e; --teal-d:#0a6e61; --blue:#34507c; --blue-d:#2b4368; --amber:#b9772a; --amber-d:#8f5a1d; --purple:#6d5bd0; --purple-d:#4f3fae;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;min-height:100%;}
@@ -45,12 +45,14 @@
   .card.k .ribbon{background:linear-gradient(90deg,var(--teal),var(--teal-d));}
   .card.g .ribbon{background:linear-gradient(90deg,var(--blue),var(--blue-d));}
   .card.n .ribbon{background:linear-gradient(90deg,var(--amber),var(--amber-d));}
+  .card.p .ribbon{background:linear-gradient(90deg,var(--purple),var(--purple-d));}
   .card .ico{
     width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:6px 0 14px;
   }
   .card.k .ico{background:#def3ee;color:var(--teal-d);}
   .card.g .ico{background:#e6ecf5;color:var(--blue);}
   .card.n .ico{background:#f6ecda;color:var(--amber-d);}
+  .card.p .ico{background:#eae6fa;color:var(--purple-d);}
   .card .ico svg{width:30px;height:30px;}
   .card h2{margin:0 0 6px;font-size:16.5px;font-weight:700;line-height:1.35;}
   .card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.6;flex:1;}
@@ -60,6 +62,7 @@
   .card.k .go{color:var(--teal-d);}
   .card.g .go{color:var(--blue);}
   .card.n .go{color:var(--amber-d);}
+  .card.p .go{color:var(--purple-d);}
   .card .go svg{width:15px;height:15px;}
 
   .foot{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;}
@@ -111,6 +114,18 @@
       </span>
       <h2>入院時情報提供書</h2>
       <p>入院時に医療機関へ提供する情報を入力して、Excel様式での出力・印刷／PDF化ができます。</p>
+      <span class="go">ひらく
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </a>
+
+    <a class="card p" href="nintei.html">
+      <span class="ribbon"></span>
+      <span class="ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7z"/><path d="M9 13l1.5 1.5L13 12M9 17h6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <h2>要介護認定 申請書</h2>
+      <p>要介護・要支援認定（更新）申請書を入力して、Excel様式での出力・印刷／PDF化ができます。</p>
       <span class="go">ひらく
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </span>
