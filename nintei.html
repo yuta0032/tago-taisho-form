@@ -109,7 +109,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
         </div>
       </div>
       <div class="field"><div class="lab">住所・電話</div>
-        <input type="text" data-k="zip" inputmode="numeric" placeholder="〒 郵便番号" style="margin-bottom:8px">
+        <input type="text" data-k="zip" inputmode="numeric" placeholder="〒 郵便番号（住所を自動入力）" data-addr-lookup data-addr-target="addr" style="margin-bottom:8px">
         <input type="text" data-k="addr" placeholder="住所" data-zip-lookup data-zip-target="zip" style="margin-bottom:8px">
         <input type="text" data-k="tel" inputmode="tel" placeholder="電話番号">
       </div>
@@ -173,7 +173,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
         <input type="text" data-k="hospName" placeholder="医療機関名（名称・地名で検索）" data-hosp-search data-hosp-addr="hospAddr" data-hosp-zip="hospZip" data-hosp-tel="hospTel">
       </div>
       <div class="field"><div class="lab">所在地・電話</div>
-        <input type="text" data-k="hospZip" inputmode="numeric" placeholder="〒" style="margin-bottom:8px">
+        <input type="text" data-k="hospZip" inputmode="numeric" placeholder="〒（住所を自動入力）" data-addr-lookup data-addr-target="hospAddr" style="margin-bottom:8px">
         <input type="text" data-k="hospAddr" placeholder="所在地" data-zip-lookup data-zip-target="hospZip" style="margin-bottom:8px">
         <input type="text" data-k="hospTel" inputmode="tel" placeholder="電話番号">
       </div>
