@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="hospitals.js" defer></script>
 <style>
 :root{
   --bg:#eef1f4;--card:#fff;--line:#dde3ea;--ink:#1d2733;--ink2:#5a6877;--muted:#8b97a5;
@@ -111,7 +112,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
   <div class="group">
     <div class="group-title"><span class="n">元</span>提供元・宛先</div>
     <div class="card">
-      <div class="field"><div class="lab">医療機関名（宛先）</div><input type="text" data-k="hosp" placeholder="○○病院"></div>
+      <div class="field"><div class="lab">医療機関名（宛先）</div><input type="text" data-k="hosp" placeholder="○○病院（名称・地名で検索）" data-hosp-search></div>
       <div class="field"><div class="lab">ご担当者名</div><input type="text" data-k="hospStaff" placeholder="地域連携室 ○○ 様"></div>
     </div>
   </div>
@@ -395,7 +396,7 @@ textarea{resize:vertical;min-height:72px;line-height:1.6}
   <div class="group">
     <div class="group-title"><span class="n">9</span>かかりつけ医について</div>
     <div class="card">
-      <div class="field"><div class="lab">かかりつけ医機関名・電話</div><input type="text" data-k="clinic" placeholder="機関名" style="margin-bottom:8px"><input type="text" data-k="clinicTel" placeholder="電話番号"></div>
+      <div class="field"><div class="lab">かかりつけ医機関名・電話</div><input type="text" data-k="clinic" placeholder="機関名（名称・地名で検索）" data-hosp-search style="margin-bottom:8px"><input type="text" data-k="clinicTel" placeholder="電話番号"></div>
       <div class="field"><div class="lab">医師名（フリガナ）</div><input type="text" data-k="docFuri" placeholder="フリガナ" style="margin-bottom:8px"><input type="text" data-k="docName" placeholder="医師名"></div>
       <div class="field"><div class="lab">診察方法・頻度</div><div class="chips" data-single data-grp="shinsatsu"><button class="chip" data-v="通院">通院</button><button class="chip" data-v="訪問診療">訪問診療</button></div><div class="chip-extra"><label>頻度＝</label><input class="inline-input" type="number" data-k="shinsatsuFreq" placeholder="回">回／月</div></div>
     </div>

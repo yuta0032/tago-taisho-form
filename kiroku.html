@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="hospitals.js" defer></script>
 <style>
 :root{
   --bg:#eef1f4;--card:#fff;--line:#dde3ea;--ink:#1d2733;--ink2:#5a6877;--muted:#8b97a5;
@@ -136,7 +137,7 @@ textarea{resize:vertical;min-height:78px;line-height:1.6}
       <div class="field"><div class="lab">入院原因疾患（入所目的等）</div><textarea data-k="cause" placeholder="入院・入所の原因疾患、入所目的など"></textarea></div>
       <div class="field">
         <div class="lab">入院・入所先</div>
-        <input type="text" data-k="facility" placeholder="施設名">
+        <input type="text" data-k="facility" placeholder="施設名（名称・地名で検索）" data-hosp-search>
         <div class="row2" style="margin-top:10px">
           <div><div class="mini-lab">棟</div><input type="text" data-k="ward" placeholder="棟"></div>
           <div><div class="mini-lab">室</div><input type="text" data-k="room" placeholder="室"></div>
@@ -144,7 +145,7 @@ textarea{resize:vertical;min-height:78px;line-height:1.6}
       </div>
       <div class="field">
         <div class="lab">今後の医学管理</div>
-        <input type="text" data-k="medInst" placeholder="医療機関名">
+        <input type="text" data-k="medInst" placeholder="医療機関名（名称・地名で検索）" data-hosp-search>
         <div class="subhead" style="margin-top:11px">方法</div>
         <div class="chips" data-single data-grp="medm"><button class="chip" data-v="通院">通院</button><button class="chip" data-v="訪問診療">訪問診療</button></div>
       </div>
