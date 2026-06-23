@@ -85,12 +85,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
       </div>
       <div class="field"><div class="lab">性別 / 生年月日</div>
         <div class="chips" data-single data-grp="sex" style="margin-bottom:9px"><button class="chip" data-v="男">男</button><button class="chip" data-v="女">女</button></div>
-        <div class="row3">
-          <select data-k="era"><option value="">元号</option><option>明</option><option>大</option><option>昭</option><option>平</option></select>
-          <input type="number" data-k="by" inputmode="numeric" placeholder="年">
-          <input type="number" data-k="bm" inputmode="numeric" placeholder="月">
-          <input type="number" data-k="bd" inputmode="numeric" placeholder="日">
-        </div>
+        <div><div class="mini-lab">生年月日</div><input type="date" data-k="birth"></div>
       </div>
       <div class="field"><div class="lab">住所・電話</div>
         <input type="text" data-k="zip" inputmode="numeric" placeholder="〒 郵便番号" style="margin-bottom:8px">
@@ -116,7 +111,8 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
           <button class="chip" data-v="要介護１">要介護1</button><button class="chip" data-v="要介護２">要介護2</button><button class="chip" data-v="要介護３">要介護3</button>
           <button class="chip" data-v="要介護４">要介護4</button><button class="chip" data-v="要介護５">要介護5</button>
         </div>
-        <div class="chip-extra"><label>有効期間</label><input type="text" data-k="validFrom" placeholder="開始(例 R6.4.1)" style="flex:1"><span>〜</span><input type="text" data-k="validTo" placeholder="終了" style="flex:1"></div>
+        <div class="mini-lab" style="margin-top:9px">有効期間</div>
+        <div class="row2"><input type="date" data-k="validFrom"><input type="date" data-k="validTo"></div>
       </div>
     </div>
   </div>
@@ -132,7 +128,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
       </div>
       <div class="field"><div class="lab">住所地以外の場合</div>
         <input type="text" data-k="liveAddr" placeholder="住所" style="margin-bottom:8px">
-        <input type="text" data-k="liveName" placeholder="氏名・施設名等" style="margin-bottom:8px">
+        <input type="text" data-k="liveName" placeholder="氏名・施設名等（名称・地名で検索）" data-hosp-search data-hosp-addr="liveAddr" data-hosp-tel="liveTel" style="margin-bottom:8px">
         <input type="text" data-k="liveTel" inputmode="tel" placeholder="電話番号">
       </div>
     </div>
@@ -152,7 +148,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
         <input type="text" data-k="hospTel" inputmode="tel" placeholder="電話番号">
       </div>
       <div class="field"><div class="lab">最終診察月</div>
-        <div class="chip-extra"><label>令和</label><input type="number" data-k="lastY" inputmode="numeric" placeholder="年" style="width:70px">年<input type="number" data-k="lastM" inputmode="numeric" placeholder="月" style="width:70px">月</div>
+        <input type="month" data-k="lastMonth">
       </div>
       <div class="note">注：主治医が入院先の担当医の場合は、最終診察月は申請月を記入してください。</div>
     </div>
@@ -213,12 +209,26 @@ function val(k){var e=document.querySelector('[data-k="'+k+'"]');return e?e.valu
 function selOne(g){var c=document.querySelector('[data-grp="'+g+'"] .chip.on');return c?c.dataset.v:null;}
 function selAll(g){return [].slice.call(document.querySelectorAll('[data-grp="'+g+'"] .chip.on')).map(function(c){return c.dataset.v;});}
 function jpYear(iso){if(!iso)return null;var p=iso.split('-');if(p.length<3)return null;return {y:+p[0]-2018,m:+p[1],d:+p[2]};}
+// 西暦(YYYY-MM-DD)→和暦（元号境界日まで正確）
+function gregToWareki(iso){
+  if(!iso)return null;var p=iso.split('-');if(p.length<2)return null;
+  var y=+p[0],m=+p[1],d=+(p[2]||1);if(!y||!m)return null;
+  var key=y*10000+m*100+d, era, base;
+  if(key>=20190501){era='令';base=2018;}
+  else if(key>=19890108){era='平';base=1988;}
+  else if(key>=19261225){era='昭';base=1925;}
+  else if(key>=19120730){era='大';base=1911;}
+  else {era='明';base=1867;}
+  return {era:era, y:y-base, m:m, d:d, gy:y};
+}
+function warekiStr(iso){var w=gregToWareki(iso);if(!w)return '';var e={'明':'明治','大':'大正','昭':'昭和','平':'平成','令':'令和'}[w.era];return e+w.y+'年'+w.m+'月'+w.d+'日';}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
 
 document.getElementById('clearBtn').addEventListener('click',function(){
   if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
   document.querySelectorAll('.chip.on').forEach(function(c){c.classList.remove('on');});
   document.querySelectorAll('input[type=text],input[type=number],textarea,select').forEach(function(i){i.value='';});
+  ['birth','validFrom','validTo','lastMonth'].forEach(function(k){var e=document.querySelector('[data-k="'+k+'"]');if(e)e.value='';});
 });
 
 function b64ToBuf(b64){var bin=atob(b64);var len=bin.length;var u=new Uint8Array(len);for(var i=0;i<len;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
@@ -258,11 +268,13 @@ function fillWorkbook(wb){
   A.setIf('T8',val('name'));                // 氏名
   A.circle('BH9',selOne('sex'));            // 男・女
   // 生年月日（明・大・昭　　年　　月　　日 の同一セルに元号〇＋数字を差し込む）
-  var era=val('era');
-  if(era)A.circle('BH7',era);
-  A.padBefore('BH7','年',val('by'));
-  A.padBefore('BH7','月',val('bm'));
-  A.padBefore('BH7','日',val('bd'));
+  var bw=gregToWareki(val('birth'));
+  if(bw){
+    A.circle('BH7',bw.era);
+    A.padBefore('BH7','年',bw.y);
+    A.padBefore('BH7','月',bw.m);
+    A.padBefore('BH7','日',bw.d);
+  }
 
   // 住所・電話
   A.setIf('W10',val('zip'));
@@ -280,7 +292,7 @@ function fillWorkbook(wb){
 
   // 前回認定
   A.circle('AI13',selOne('careState'));
-  if(val('validFrom')||val('validTo')){var s=A.gs('T14');/* 有効期間は同一セル内 */ A.set('T14',s+'  '+val('validFrom')+' 〜 '+val('validTo'));}
+  if(val('validFrom')||val('validTo')){A.set('T14','有効期間　　'+warekiStr(val('validFrom'))+' 〜 '+warekiStr(val('validTo')));}
 
   // 現在の居住地
   if(selOne('live')==='住所地以外'){A.mark('E16',['住所地以外']);A.circle('E16',selOne('liveKind'));A.fillParen('E16',val('liveOther'),0);}
@@ -294,8 +306,8 @@ function fillWorkbook(wb){
   A.setIf('W30',val('hospZip'));
   A.setIf('AD30',val('hospAddr'));
   A.setIf('BE31',val('hospTel'));
-  A.setIf('BV29',val('lastY'));
-  A.setIf('BZ29',val('lastM'));
+  var lw=gregToWareki(val('lastMonth'));
+  if(lw){A.setIf('BV29',lw.y);A.setIf('BZ29',lw.m);}
 
   // 第2号
   A.setIf('O35',val('tokutei'));
@@ -332,7 +344,7 @@ function buildTableHtml(ws){
   var defColW=(ws.properties&&ws.properties.defaultColWidth)||8.43;
   var defRowH=(ws.properties&&ws.properties.defaultRowHeight)||16.5;
   var colHtml='',colTotal=0;
-  for(c=minC;c<=maxCol;c++){var w=ws.getColumn(c).width;if(!w||w<=0)w=defColW;var cpx=Math.round(w*7)+5;colTotal+=cpx;colHtml+='<col style="width:'+cpx+'px">';}
+  for(c=minC;c<=maxCol;c++){var w=ws.getColumn(c).width;if(!w||w<=0)w=defColW;var cpx=Math.round(w*7)+2;colTotal+=cpx;colHtml+='<col style="width:'+cpx+'px">';}
   var rowsHtml='';
   for(r=minR;r<=maxRow;r++){
     var rh=ws.getRow(r).height;var hpx=(rh||defRowH)*96/72;
@@ -367,7 +379,7 @@ function renderSheetInto(ws,pageEl){
   pageEl.innerHTML='<div class="xl-scale">'+t.html+'</div>';
   var scaleEl=pageEl.firstElementChild, tbl=scaleEl.firstElementChild;
   var natW=tbl.offsetWidth||980, natH=tbl.offsetHeight||1380;
-  var availW=742, availH=1066;
+  var availW=746, availH=1045;
   var s=Math.min(availW/natW, availH/natH);
   scaleEl.style.cssText='transform-origin:top left;transform:scale('+s+');width:'+natW+'px;height:'+natH+'px';
   pageEl.style.cssText='width:'+(natW*s)+'px;height:'+(natH*s)+'px;overflow:hidden;margin:0 auto';
