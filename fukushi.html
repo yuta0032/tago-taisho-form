@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>福祉用具購入理由書</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+:root{
+  --bg:#eef1f4;--card:#fff;--line:#dde3ea;--ink:#1d2733;--ink2:#5a6877;--muted:#8b97a5;
+  --teal:#0d8f7e;--teal-d:#0a6e61;--teal-soft:#d8f3ee;--teal-line:#67c5b6;
+  --shadow:0 1px 2px rgba(20,40,60,.05),0 6px 18px rgba(20,40,60,.06);--r:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;padding-bottom:140px;-webkit-text-size-adjust:100%}
+.topbar{background:linear-gradient(180deg,#0d8f7e,#0a6e61);color:#fff;
+  padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));box-shadow:0 2px 10px rgba(10,80,70,.25)}
+.topbar .home{display:inline-flex;align-items:center;gap:5px;color:#fff;text-decoration:none;font-size:12px;opacity:.92;margin-bottom:7px}
+.topbar .home svg{width:15px;height:15px}
+.topbar h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.02em}
+.topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+.wrap{max-width:560px;margin:0 auto;padding:14px 12px}
+.group{margin-top:18px}
+.group-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--teal-d);margin:0 6px 8px;letter-spacing:.03em}
+.group-title .n{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:7px;background:var(--teal);color:#fff;font-size:12px;font-weight:700;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
+.field{padding:13px 14px;border-top:1px solid var(--line)}
+.field:first-child{border-top:0}
+.field>.lab{font-size:12.5px;font-weight:700;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-bottom:9px;flex-wrap:wrap}
+.row2{display:flex;gap:10px}.row2>*{flex:1;min-width:0}
+input[type=text],input[type=tel],textarea{width:100%;border:1px solid var(--line);background:#fbfcfd;border-radius:10px;padding:11px 12px;font-size:15px;font-family:inherit;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus{border-color:var(--teal-line);box-shadow:0 0 0 3px rgba(13,143,126,.14);background:#fff}
+textarea{resize:vertical;min-height:48px;line-height:1.5}
+.mini-lab{font-size:11px;color:var(--muted);margin:0 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{appearance:none;border:1.5px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;font-size:13.5px;font-weight:500;border-radius:999px;padding:7px 12px;min-height:38px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;transition:all .12s;user-select:none}
+.chip:active{transform:scale(.96)}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(13,143,126,.3)}
+.chip.on::before{content:"✓";font-size:11px;font-weight:700}
+.item-name{font-size:14.5px;font-weight:700;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.cat-band{font-size:12px;font-weight:700;color:var(--teal-d);background:var(--teal-soft);border-radius:8px;padding:6px 11px;margin:2px 0 0}
+.note-s{font-size:11.5px;color:var(--muted);margin-top:7px}
+.consent-text{font-size:12px;color:var(--ink2);line-height:1.7;margin-top:6px}
+.consent-text ul{margin:6px 0;padding-left:1.1em}
+.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.actionbar .inner{display:flex;gap:10px;max-width:560px;margin:0 auto}
+.btn{flex:1;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .1s}
+.btn:active{transform:scale(.97)}.btn:disabled{opacity:.6}
+.btn-excel{background:#157347;color:#fff;box-shadow:0 4px 12px rgba(21,115,71,.3)}
+.btn-print{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(13,143,126,.3)}
+.btn-ghost{background:#eef1f4;color:var(--ink2);flex:0 0 auto;padding:14px 16px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:#1d2733;color:#fff;font-size:13px;padding:11px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:84%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== 印刷プレビュー（A4・津山市様式の再現） ===== */
+#printArea{display:none}
+.fk-page{background:#fff;color:#000;width:190mm;margin:0 auto;padding:0 0 6mm;
+  font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Hiragino Sans","MS PGothic",sans-serif;page-break-after:always}
+.fk-page:last-child{page-break-after:auto}
+.fk-title{font-size:15pt;font-weight:700;margin:2mm 0 1mm}
+.fk-note{font-size:8.5pt;margin:0 0 2mm}
+.fk-htbl{border-collapse:collapse;table-layout:fixed;width:190mm;font-size:9.5pt;margin-bottom:2mm}
+.fk-htbl td{border:1px solid #000;padding:1mm 1.5mm;vertical-align:middle}
+.fk-htbl .hl{background:#f0f0f0;text-align:center;font-weight:700;white-space:nowrap}
+.fk-tbl{border-collapse:collapse;table-layout:fixed;width:190mm;font-size:9.5pt}
+.fk-tbl td{border:1px solid #000;padding:1mm 1.5mm;vertical-align:top;word-break:break-word;line-height:1.35}
+.fk-tbl .hd{background:#f0f0f0;text-align:center;font-weight:700;font-size:9pt}
+.fk-tbl .nm{font-weight:700}
+.fk-tbl .cat{writing-mode:vertical-rl;text-orientation:upright;font-weight:700;text-align:center;letter-spacing:.1em;white-space:nowrap}
+.fk-pur span{display:inline-block;margin-right:7px;white-space:nowrap}
+.fk-sub{font-size:8pt;color:#000;margin-top:1mm}
+.fk-consent{font-size:9pt;line-height:1.6;border:1px solid #000;padding:2mm;margin-top:2mm}
+.fk-consent ul{margin:1mm 0;padding-left:1.2em}
+.fk-terms{font-size:8.5pt;line-height:1.55;margin-top:2mm}
+.fk-maker{border-collapse:collapse;table-layout:fixed;width:120mm;font-size:9.5pt;margin-top:3mm}
+.fk-maker td{border:1px solid #000;padding:1.2mm 2mm}
+.fk-maker .hl{background:#f0f0f0;text-align:center;font-weight:700;white-space:nowrap}
+.ring{display:inline-block;border:1.4px solid #000;border-radius:50%;width:1.5em;height:1.5em;line-height:1.45em;text-align:center}
+
+@media print{
+  @page{size:A4 portrait;margin:8mm}
+  html,body{background:#fff;padding:0;margin:0}
+  .topbar,.wrap,.actionbar,.toast{display:none!important}
+  #printArea{display:block!important}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="home" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
+  <h1>福祉用具購入理由書</h1>
+  <div class="sub">スマホで入力 → Excel様式で出力・印刷／PDF</div>
+</div>
+
+<div class="wrap">
+  <!-- 被保険者 -->
+  <div class="group">
+    <div class="group-title"><span class="n">対象</span>被保険者</div>
+    <div class="card">
+      <div class="field"><div class="lab">被保険者番号</div><input type="text" data-k="hihoNo" inputmode="numeric" placeholder="被保険者番号"></div>
+      <div class="field"><div class="lab">被保険者氏名</div><input type="text" data-k="hihoName" placeholder="氏名"></div>
+      <div class="field"><div class="lab">住所</div><input type="text" data-k="hihoAddr" placeholder="住所"></div>
+      <div class="field"><div class="lab">要介護度</div>
+        <div class="chips" data-single data-grp="kaigo">
+          <button class="chip" data-v="要支援1">要支援1</button><button class="chip" data-v="要支援2">要支援2</button>
+          <button class="chip" data-v="要介護1">要介護1</button><button class="chip" data-v="要介護2">要介護2</button><button class="chip" data-v="要介護3">要介護3</button><button class="chip" data-v="要介護4">要介護4</button><button class="chip" data-v="要介護5">要介護5</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 用具（自動生成） -->
+  <div id="itemsHost"></div>
+
+  <!-- 同意 -->
+  <div class="group">
+    <div class="group-title"><span class="n">同意</span>貸与・販売の選択（スロープ・歩行器・歩行補助つえ）</div>
+    <div class="card">
+      <div class="field">
+        <div class="chips" data-single data-grp="consent"><button class="chip" data-v="確認済み">内容を確認・説明し同意を得た</button></div>
+        <div class="note-s">スロープ・歩行器・歩行補助つえを購入する場合にチェック。利用者へ貸与と販売の選択に必要な情報（身体状況の見通し、負担額の違い、平均利用月数 等）を説明し同意を得たうえで購入判断をした旨の確認です。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 作成者 -->
+  <div class="group">
+    <div class="group-title"><span class="n">作成</span>理由書作成者</div>
+    <div class="card">
+      <div class="field"><div class="lab">氏名</div><input type="text" data-k="sakuName" placeholder="氏名"></div>
+      <div class="field"><div class="lab">事業者名</div><input type="text" data-k="sakuOffice" placeholder="事業者名"></div>
+      <div class="field"><div class="lab">住所</div><input type="text" data-k="sakuAddr" placeholder="住所"></div>
+      <div class="field"><div class="lab">電話番号</div><input type="tel" data-k="sakuTel" inputmode="tel" placeholder="000-0000-0000"></div>
+    </div>
+  </div>
+</div>
+
+<div class="actionbar"><div class="inner">
+  <button class="btn btn-ghost" id="clearBtn">クリア</button>
+  <button class="btn btn-print" id="printBtn">印刷/PDF</button>
+  <button class="btn btn-excel" id="excelBtn">Excel出力</button>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<div id="printArea"></div>
+
+<script>
+/* ===== 品目データモデル ===== */
+var PUR={t:'転倒予防',d:'動作の容易性の確保',h:'行動範囲の拡大の確保',k:'介護の軽減'};
+function P(){return [].slice.call(arguments).map(function(c){return PUR[c];});}
+var PAGE1=[
+  {k:'koshikake',name:'腰掛便座',pur:P('t','d','h','k')},
+  {k:'tokushu',name:'特殊尿器',pur:P('k'),note:'便吸引機能付のものの場合　確認書類の添付'},
+  {k:'haisetsu',name:'排泄予測支援機器',pur:P('k'),other:true,note:'確認書類の添付'},
+  {cat:'入浴補助用具',items:[
+    {k:'isu',name:'入浴用いす',pur:P('t','d','k')},
+    {k:'tesuri',name:'浴槽用手すり',pur:P('t','d','k')},
+    {k:'yokunaisu',name:'浴槽内いす',pur:P('t','d','k')},
+    {k:'nyuyokudai',name:'入浴台',pur:P('t','d','h','k')},
+    {k:'sunoko1',name:'浴室内すのこ',pur:P('t','d','h','k')},
+    {k:'sunoko2',name:'浴槽内すのこ',pur:P('t','d','k')},
+    {k:'belt',name:'入浴用介助ベルト',pur:P('t','d','k')}
+  ]},
+  {k:'kani',name:'簡易浴槽',pur:P('k'),other:true},
+  {k:'lift',name:'移動用リフトのつり具部分',pur:P('k'),other:true}
+];
+var PAGE2=[
+  {k:'slope',name:'スロープ',pur:P('t','d','h')},
+  {k:'walker',name:'歩行器',pur:P('t','d','h')},
+  {k:'cane',name:'歩行補助つえ',pur:P('t','d','h')}
+];
+var TERMS=[
+  'スロープ：室内の敷居等の小さな段差解消に用いて、車いす等での移動を容易にするもの（持ち運ばず、取付工事が不要な固定用のもの）',
+  '歩行器：車輪・キャスター付きの歩行器（歩行車）を除き、脚部がすべて杖先ゴム等の形状の歩行器',
+  '歩行補助つえ：カナディアン・クラッチ、ロフストランド・クラッチ、プラットフォーム・クラッチに限る「単点杖」（松葉づえを除く）もしくは、「多点杖」'
+];
+var CONSENT_LINES=[
+  '利用者の身体状況の変化の見通しに関する医師やリハビリテーション専門職等から聴取した意見',
+  'サービス担当者会議等における多職種による協議の結果を踏まえた生活環境等の変化や福祉用具の利用期間に関する見通し',
+  '貸与と販売それぞれの利用者負担額の違い',
+  '長期利用が見込まれる場合は販売の方が利用者負担額を抑えられること',
+  '短期利用が見込まれる場合は適時適切な福祉用具に交換できる貸与が適していること',
+  '国が示している福祉用具の平均的な利用月数'
+];
+
+function allItems(){var a=[];[PAGE1,PAGE2].forEach(function(pg){pg.forEach(function(it){if(it.items)a=a.concat(it.items);else if(!it.cat)a.push(it);});});return a;}
+
+/* ===== 入力UI生成 ===== */
+function buildInputs(){
+  var host=document.getElementById('itemsHost');
+  function section(title,badge,blocks){
+    var h='<div class="group"><div class="group-title"><span class="n">'+badge+'</span>'+title+'</div><div class="card">';
+    h+=blocks;h+='</div></div>';return h;
+  }
+  function itemField(it){
+    var h='<div class="field"><div class="item-name">'+it.name+'</div>';
+    h+='<div class="mini-lab">購入目的（該当を選択／複数可）</div>';
+    h+='<div class="chips" data-grp="pur_'+it.k+'">';
+    it.pur.forEach(function(p){h+='<button class="chip" data-v="'+p+'">'+p+'</button>';});
+    if(it.other)h+='<button class="chip" data-v="その他">その他</button>';
+    h+='</div>';
+    if(it.other)h+='<input type="text" data-k="other_'+it.k+'" placeholder="その他（内容）" style="margin-top:8px">';
+    if(it.note)h+='<div class="note-s">※ '+it.note+'</div>';
+    h+='<input type="text" data-k="riyu_'+it.k+'" placeholder="購入理由（具体的に）" style="margin-top:8px">';
+    h+='</div>';return h;
+  }
+  var p1='';
+  PAGE1.forEach(function(it){
+    if(it.cat){p1+='<div class="field"><div class="cat-band">'+it.cat+'</div></div>';it.items.forEach(function(s){p1+=itemField(s);});}
+    else p1+=itemField(it);
+  });
+  var p2='';PAGE2.forEach(function(it){p2+=itemField(it);});
+  host.innerHTML=section('福祉用具（販売品目）','①',p1)+section('福祉用具（貸与・販売 選択品目）','②',p2);
+}
+buildInputs();
+
+/* ===== 共通 ===== */
+function val(k){var e=document.querySelector('[data-k="'+k+'"]');return e?e.value.trim():'';}
+function selOne(g){var c=document.querySelector('[data-grp="'+g+'"] .chip.on');return c?c.dataset.v:'';}
+function selAll(g){return [].slice.call(document.querySelectorAll('[data-grp="'+g+'"] .chip.on')).map(function(c){return c.dataset.v;});}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2600);}
+function esc(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.addEventListener('click',function(e){
+  var chip=e.target.closest('.chip');if(!chip)return;
+  var box=chip.closest('.chips');
+  if(box&&box.hasAttribute('data-single')){box.querySelectorAll('.chip').forEach(function(c){if(c!==chip)c.classList.remove('on');});}
+  chip.classList.toggle('on');
+});
+
+/* ===== 印刷プレビュー生成 ===== */
+function box(on){return on?'☑':'☐';}
+function ring(num,sel){return sel?('<span class="ring">'+num+'</span>'):num;}
+function kaigoLine(){
+  var v=selOne('kaigo');
+  function n(label,num){var key=label+num;return ring(num, v===key);}
+  return '要支援　'+n('要支援',1)+'・'+n('要支援',2)+'　　要介護　'+n('要介護',1)+'・'+n('要介護',2)+'・'+n('要介護',3)+'・'+n('要介護',4)+'・'+n('要介護',5);
+}
+function headerTbl(){
+  return '<table class="fk-htbl"><colgroup><col style="width:22mm"><col style="width:50mm"><col style="width:22mm"><col style="width:96mm"></colgroup>'+
+    '<tr><td class="hl">被保険者番号</td><td>'+esc(val('hihoNo'))+'</td><td class="hl">被保険者氏名</td><td>'+esc(val('hihoName'))+'</td></tr>'+
+    '<tr><td class="hl">住　所</td><td colspan="3">'+esc(val('hihoAddr'))+'</td></tr>'+
+    '<tr><td class="hl">要介護度</td><td colspan="3">津山市　　'+kaigoLine()+'</td></tr></table>';
+}
+function purposesHtml(it){
+  var sel=selAll('pur_'+it.k);
+  var parts=it.pur.map(function(p){return '<span>'+box(sel.indexOf(p)>=0)+p+'</span>';});
+  if(it.other){var oc=sel.indexOf('その他')>=0;parts.push('<span>'+box(oc)+'その他（'+esc(val('other_'+it.k))+'）</span>');}
+  var h='<div class="fk-pur">'+parts.join('')+'</div>';
+  if(it.note)h+='<div class="fk-sub">※ '+it.note+'</div>';
+  return h;
+}
+function itemRows(list){
+  var h='';
+  list.forEach(function(it){
+    if(it.cat){
+      var rows=it.items.length;
+      it.items.forEach(function(s,i){
+        h+='<tr>';
+        if(i===0)h+='<td class="cat" rowspan="'+rows+'" style="width:8mm">'+it.cat+'</td>';
+        h+='<td class="nm" style="width:32mm">'+s.name+'</td><td style="width:80mm">'+purposesHtml(s)+'</td><td>'+esc(val('riyu_'+s.k))+'</td></tr>';
+      });
+    }else{
+      h+='<tr><td class="nm" colspan="2" style="width:40mm">'+it.name+'</td><td style="width:80mm">'+purposesHtml(it)+'</td><td>'+esc(val('riyu_'+it.k))+'</td></tr>';
+    }
+  });
+  return h;
+}
+function makerTbl(){
+  return '<table class="fk-maker"><colgroup><col style="width:22mm"><col style="width:98mm"></colgroup>'+
+    '<tr><td class="hl">氏　名</td><td>'+esc(val('sakuName'))+'</td></tr>'+
+    '<tr><td class="hl">事業者名</td><td>'+esc(val('sakuOffice'))+'</td></tr>'+
+    '<tr><td class="hl">住　所</td><td>'+esc(val('sakuAddr'))+'</td></tr>'+
+    '<tr><td class="hl">電話番号</td><td>'+esc(val('sakuTel'))+'</td></tr></table>';
+}
+function tblOpen(){return '<table class="fk-tbl"><colgroup><col style="width:8mm"><col style="width:32mm"><col style="width:80mm"><col style="width:70mm"></colgroup>'+
+  '<tr><td class="hd" colspan="2">福祉用具の種類</td><td class="hd">購入目的及び期待する効果<br><span style="font-weight:400;font-size:8pt">＊該当するものにチェック</span></td><td class="hd">購入理由<br><span style="font-weight:400;font-size:8pt">＊具体的に記入してください</span></td></tr>';}
+function consentBlock(){
+  var on=selOne('consent')==='確認済み';
+  var h='<div class="fk-consent"><div>'+box(on)+'　内容を確認した上で、必ずチェックしてください。</div>'+
+    '<div style="margin-top:1mm">以下のとおり、利用者へ説明をし、同意を得ています。</div>'+
+    '<div style="margin-top:1mm">福祉用具の貸与と販売の選択に当たって、必要な情報は、</div><ul>';
+  CONSENT_LINES.forEach(function(l){h+='<li>'+l+'</li>';});
+  h+='</ul><div>等があり、以上の点を十分に考慮し、慎重に購入の判断をするべきであること。</div></div>';
+  h+='<div class="fk-terms">';TERMS.forEach(function(t){h+='<div>'+t+'</div>';});h+='</div>';
+  return h;
+}
+function fillPrint(){
+  var pa=document.getElementById('printArea');
+  var p1='<div class="fk-page"><div class="fk-title">福祉用具購入理由書</div><div class="fk-note">注意・購入した福祉用具それぞれについて記入してください。</div>'+
+    headerTbl()+tblOpen()+itemRows(PAGE1)+'</table>'+makerTbl()+'</div>';
+  var p2='<div class="fk-page"><div class="fk-title">福祉用具購入理由書</div><div class="fk-note">注意・購入した福祉用具それぞれについて記入してください。</div>'+
+    headerTbl()+tblOpen()+itemRows(PAGE2)+'</table>'+consentBlock()+makerTbl()+'</div>';
+  pa.innerHTML=p1+p2;
+}
+
+document.getElementById('printBtn').addEventListener('click',function(){fillPrint();setTimeout(function(){window.print();},80);});
+document.getElementById('clearBtn').addEventListener('click',function(){
+  if(!confirm('入力内容をすべてクリアします。よろしいですか？'))return;
+  document.querySelectorAll('.chip.on').forEach(function(c){c.classList.remove('on');});
+  document.querySelectorAll('input,textarea').forEach(function(i){i.value='';});
+});
+
+/* ===== Excel出力 ===== */
+function setB(c){c.border={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};}
+function purposeText(it){
+  var sel=selAll('pur_'+it.k);
+  var parts=it.pur.map(function(p){return box(sel.indexOf(p)>=0)+p;});
+  if(it.other)parts.push(box(sel.indexOf('その他')>=0)+'その他（'+val('other_'+it.k)+'）');
+  var s=parts.join('　');
+  if(it.note)s+='\n※ '+it.note;
+  return s;
+}
+function buildSheet(wb,name,list,withConsent){
+  var ws=wb.addWorksheet(name,{pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:1,margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2}}});
+  ws.columns=[{width:4},{width:16},{width:40},{width:34}];
+  var r=1;
+  ws.mergeCells('A'+r+':D'+r);var t=ws.getCell('A'+r);t.value='福祉用具購入理由書';t.font={size:14,bold:true};r++;
+  ws.mergeCells('A'+r+':D'+r);ws.getCell('A'+r).value='注意・購入した福祉用具それぞれについて記入してください。';ws.getCell('A'+r).font={size:9};r++;
+  function hl(addr,v){var c=ws.getCell(addr);c.value=v;c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.font={bold:true,size:10};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF0F0F0'}};setB(c);}
+  function vc(addr,v){var c=ws.getCell(addr);c.value=v;c.alignment={vertical:'middle',wrapText:true};c.font={size:10};setB(c);}
+  // header
+  hl('A'+r,'被保険者番号');ws.mergeCells('B'+r+':B'+r);vc('B'+r,val('hihoNo'));hl('C'+r,'被保険者氏名');vc('D'+r,val('hihoName'));r++;
+  hl('A'+r,'住所');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('hihoAddr'));r++;
+  hl('A'+r,'要介護度');ws.mergeCells('B'+r+':D'+r);vc('B'+r,'津山市　'+(selOne('kaigo')||''));r++;
+  // table header
+  ws.mergeCells('A'+r+':B'+r);hl('A'+r,'福祉用具の種類');hl('C'+r,'購入目的及び期待する効果（＊該当にチェック）');hl('D'+r,'購入理由（＊具体的に）');r++;
+  list.forEach(function(it){
+    if(it.cat){
+      var start=r;
+      it.items.forEach(function(s){
+        ws.getCell('A'+r).value=(r===start?it.cat:'');var ac=ws.getCell('A'+r);ac.alignment={horizontal:'center',vertical:'middle',textRotation:255};ac.font={bold:true,size:9};setB(ac);
+        vc('B'+r,s.name);ws.getCell('B'+r).font={bold:true,size:10};
+        vc('C'+r,purposeText(s));vc('D'+r,val('riyu_'+s.k));
+        ws.getRow(r).height=Math.max(28,(it.items?28:28));r++;
+      });
+      ws.mergeCells('A'+start+':A'+(r-1));
+    }else{
+      ws.mergeCells('A'+r+':B'+r);vc('A'+r,it.name);ws.getCell('A'+r).font={bold:true,size:10};ws.getCell('A'+r).alignment={vertical:'middle',wrapText:true};
+      vc('C'+r,purposeText(it));vc('D'+r,val('riyu_'+it.k));ws.getRow(r).height=30;r++;
+    }
+  });
+  r++;
+  if(withConsent){
+    ws.mergeCells('A'+r+':D'+r);var cc=ws.getCell('A'+r);
+    var on=selOne('consent')==='確認済み';
+    cc.value=box(on)+' 内容を確認した上で、必ずチェックしてください。\n以下のとおり、利用者へ説明をし、同意を得ています。\n福祉用具の貸与と販売の選択に当たって必要な情報（'+CONSENT_LINES.join('／')+' 等）を十分に考慮し、慎重に購入の判断をするべきであること。\n\n'+TERMS.join('\n');
+    cc.alignment={vertical:'top',wrapText:true};cc.font={size:9};setB(cc);ws.getRow(r).height=150;r+=2;
+  }
+  // maker
+  hl('A'+r,'理由書作成者');ws.mergeCells('B'+r+':D'+r);vc('B'+r,'');r++;
+  hl('A'+r,'氏名');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuName'));r++;
+  hl('A'+r,'事業者名');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuOffice'));r++;
+  hl('A'+r,'住所');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuAddr'));r++;
+  hl('A'+r,'電話番号');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuTel'));r++;
+  return ws;
+}
+document.getElementById('excelBtn').addEventListener('click',async function(){
+  var btn=this;btn.disabled=true;
+  try{
+    var wb=new ExcelJS.Workbook();
+    buildSheet(wb,'販売品目',PAGE1,false);
+    buildSheet(wb,'貸与・販売選択品目',PAGE2,true);
+    var buf=await wb.xlsx.writeBuffer();
+    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var nm=val('hihoName')?('福祉用具購入理由書_'+val('hihoName')):'福祉用具購入理由書';
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm+'.xlsx';
+    document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast('Excelを出力しました');
+  }catch(e){toast('Excel出力に失敗しました');console.error(e);}
+  finally{btn.disabled=false;}
+});
+</script>
+</body>
+</html>
