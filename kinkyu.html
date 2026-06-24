@@ -217,18 +217,18 @@ function table(grid,rows){
   return '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'+bd+'</w:tblPr><w:tblGrid>'+g+'</w:tblGrid>'+rows.join('')+'</w:tbl>';}
 function L(text,w,span){return cell(para(text,{align:'center',b:true,sz:21}),{w:w,span:span,shade:'F0F0F0'});}
 function V(text,w,span){return cell(para(text,{sz:21}),{w:w,span:span});}
-// セクション(連絡先①/②/かかりつけ医)を3行で生成。grid=[1650,1700,4688,1600]（合計9638=A4余白1134内）
+// セクション(連絡先①/②/かかりつけ医)を3行で生成。grid=[1800,1850,5016,1800]（合計10466=A4余白720内いっぱい）
 function blockRows(sec,n,med){
   var r=[];
   if(med){
-    r.push(row([cell(para(sec,{align:'center',b:true,sz:21}),{w:1650,vMerge:'restart',shade:'F0F0F0'}),L('医療機関名',1700),V(val(n+'med'),6288,2)],1000));
-    r.push(row([cell('<w:p/>',{w:1650,vMerge:'continue',shade:'F0F0F0'}),L('氏　名',1700),V(val(n+'name'),6288,2)],1000));
-    r.push(row([cell('<w:p/>',{w:1650,vMerge:'continue',shade:'F0F0F0'}),L('電話番号',1700),V(val(n+'tel'),6288,2)],1000));
+    r.push(row([cell(para(sec,{align:'center',b:true,sz:21}),{w:1800,vMerge:'restart',shade:'F0F0F0'}),L('医療機関名',1850),V(val(n+'med'),6816,2)],1000));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('氏　名',1850),V(val(n+'name'),6816,2)],1000));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('電話番号',1850),V(val(n+'tel'),6816,2)],1000));
   }else{
-    var relCell=cell(para('続柄',{sz:16})+para(val(n+'rel'),{sz:21}),{w:1600,valign:'top'});
-    r.push(row([cell(para(sec,{align:'center',b:true,sz:21}),{w:1650,vMerge:'restart',shade:'F0F0F0'}),L('氏　名',1700),V(val(n+'name'),4688),relCell],1000));
-    r.push(row([cell('<w:p/>',{w:1650,vMerge:'continue',shade:'F0F0F0'}),L('住　所',1700),V(val(n+'addr'),6288,2)],1300));
-    r.push(row([cell('<w:p/>',{w:1650,vMerge:'continue',shade:'F0F0F0'}),L('電話番号',1700),V(val(n+'tel'),6288,2)],1000));
+    var relCell=cell(para('続柄',{sz:16})+para(val(n+'rel'),{sz:21}),{w:1800,valign:'top'});
+    r.push(row([cell(para(sec,{align:'center',b:true,sz:21}),{w:1800,vMerge:'restart',shade:'F0F0F0'}),L('氏　名',1850),V(val(n+'name'),5016),relCell],1000));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('住　所',1850),V(val(n+'addr'),6816,2)],1300));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('電話番号',1850),V(val(n+'tel'),6816,2)],1000));
   }
   return r;
 }
@@ -238,9 +238,9 @@ function buildDocXml(){
   b+=para('本人氏名　'+val('self'),{align:'right',sz:22});
   b+=para('',{});
   var rows=blockRows('連絡先①','c1',false).concat(blockRows('連絡先②','c2',false),blockRows('かかりつけ医','k',true));
-  b+=table([1650,1700,4688,1600],rows);
-  b+=para('',{});
-  var sect='<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>';
+  b+=table([1800,1850,5016,1800],rows);
+  b+='<w:p><w:pPr><w:spacing w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>';
+  var sect='<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="0" w:footer="0" w:gutter="0"/><w:vAlign w:val="center"/></w:sectPr>';
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+b+sect+'</w:body></w:document>';
 }
 var CT_XML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
