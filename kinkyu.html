@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="hospitals.js" defer></script>
 <style>
 :root{
@@ -138,7 +137,7 @@ textarea{resize:vertical;min-height:60px;line-height:1.6}
 <div class="actionbar"><div class="inner">
   <button class="btn btn-ghost" id="clearBtn">クリア</button>
   <button class="btn btn-print" id="printBtn">印刷/PDF</button>
-  <button class="btn btn-excel" id="excelBtn">Excel出力</button>
+  <button class="btn btn-excel" id="wordBtn">Word出力</button>
 </div></div>
 <div class="toast" id="toast"></div>
 
@@ -180,56 +179,82 @@ document.getElementById('clearBtn').addEventListener('click',function(){
   document.querySelectorAll('input,textarea').forEach(function(i){i.value='';});
 });
 
-/* ===== Excel出力（ExcelJSで様式を生成） ===== */
-function setBorder(cell){cell.border={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};}
-document.getElementById('excelBtn').addEventListener('click',async function(){
+/* ===== Word(.docx)出力（元のWord様式を再現） ===== */
+var CRC_T=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(u8){var c=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function strU8(s){return new TextEncoder().encode(s);}
+function zipStore(files){
+  var parts=[],central=[],offset=0;
+  function u16(n){return [n&255,(n>>8)&255];}
+  function u32(n){return [n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];}
+  files.forEach(function(f){
+    var data=typeof f.data==='string'?strU8(f.data):f.data;
+    var name=strU8(f.name);var crc=crc32(data);
+    var lh=[].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0));
+    parts.push(new Uint8Array(lh),name,data);
+    var ch=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset));
+    central.push(new Uint8Array(ch),name);
+    offset+=30+name.length+data.length;
+  });
+  var cdStart=offset,cdSize=0;central.forEach(function(c){cdSize+=c.length;});
+  var end=[].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cdSize),u32(cdStart),u16(0));
+  return new Blob(parts.concat(central,[new Uint8Array(end)]),{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+function xesc(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function run(text,o){o=o||{};var rpr='';if(o.b)rpr+='<w:b/>';if(o.sz){rpr+='<w:sz w:val="'+o.sz+'"/><w:szCs w:val="'+o.sz+'"/>';}rpr=rpr?'<w:rPr>'+rpr+'</w:rPr>':'';
+  return '<w:r>'+rpr+'<w:t xml:space="preserve">'+xesc(text)+'</w:t></w:r>';}
+function para(text,o){o=o||{};var jc=o.align?'<w:jc w:val="'+o.align+'"/>':'';return '<w:p><w:pPr>'+jc+'<w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'+run(text,o)+'</w:p>';}
+function cell(content,o){o=o||{};var pr='<w:tcPr><w:tcW w:w="'+(o.w||0)+'" w:type="dxa"/>';
+  if(o.span)pr+='<w:gridSpan w:val="'+o.span+'"/>';
+  if(o.vMerge)pr+='<w:vMerge w:val="'+o.vMerge+'"/>';
+  pr+='<w:vAlign w:val="'+(o.valign||'center')+'"/>';
+  if(o.shade)pr+='<w:shd w:val="clear" w:color="auto" w:fill="'+o.shade+'"/>';
+  pr+='</w:tcPr>';return '<w:tc>'+pr+(content||'<w:p/>')+'</w:tc>';}
+function row(cells){return '<w:tr>'+cells.join('')+'</w:tr>';}
+function table(grid,rows){
+  var bd='<w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/></w:tblBorders>';
+  var g=grid.map(function(w){return '<w:gridCol w:w="'+w+'"/>';}).join('');
+  return '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'+bd+'</w:tblPr><w:tblGrid>'+g+'</w:tblGrid>'+rows.join('')+'</w:tbl>';}
+function L(text,w,span){return cell(para(text,{align:'center',b:true,sz:21}),{w:w,span:span,shade:'F0F0F0'});}
+function V(text,w,span){return cell(para(text,{sz:21}),{w:w,span:span});}
+// セクション(連絡先①/②/かかりつけ医)を3行で生成。grid=[1800,1800,5066,1800]
+function blockRows(sec,n,med){
+  var r=[];
+  if(med){
+    r.push(row([cell(para(sec,{align:'center',b:true,sz:21}),{w:1800,vMerge:'restart',shade:'F0F0F0'}),L('医療機関名',1800),V(val(n+'med'),6866,2)]));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('氏　名',1800),V(val(n+'name'),6866,2)]));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('電話番号',1800),V(val(n+'tel'),6866,2)]));
+  }else{
+    var relCell=cell(para('続柄　'+val(n+'rel'),{sz:21}),{w:1800});
+    r.push(row([cell(para(sec,{align:'center',b:true,sz:21}),{w:1800,vMerge:'restart',shade:'F0F0F0'}),L('氏　名',1800),V(val(n+'name'),5066),relCell]));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('住　所',1800),V(val(n+'addr'),6866,2)]));
+    r.push(row([cell('<w:p/>',{w:1800,vMerge:'continue',shade:'F0F0F0'}),L('電話番号',1800),V(val(n+'tel'),6866,2)]));
+  }
+  return r;
+}
+function buildDocXml(){
+  var b='';
+  b+=para('緊急時の連絡先',{align:'center',b:true,sz:36});
+  b+=para('本人氏名　'+val('self'),{align:'right',sz:22});
+  b+=para('',{});
+  var rows=blockRows('連絡先①','c1',false).concat(blockRows('連絡先②','c2',false),blockRows('かかりつけ医','k',true));
+  b+=table([1800,1800,5066,1800],rows);
+  b+=para('',{});
+  var sect='<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+b+sect+'</w:body></w:document>';
+}
+var CT_XML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
+var RELS_XML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+document.getElementById('wordBtn').addEventListener('click',function(){
   var btn=this;btn.disabled=true;
   try{
-    var wb=new ExcelJS.Workbook();
-    var ws=wb.addWorksheet('緊急時の連絡先',{pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:1,margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2}}});
-    ws.columns=[{width:13},{width:13},{width:34},{width:11}];
-    // タイトル
-    ws.mergeCells('A1:D1');
-    var t=ws.getCell('A1');t.value='緊急時の連絡先';t.font={size:20,bold:true};t.alignment={horizontal:'center',vertical:'middle'};
-    ws.getRow(1).height=34;
-    // 本人氏名
-    ws.mergeCells('A2:D2');
-    var s=ws.getCell('A2');s.value='本人氏名　'+val('self');s.alignment={horizontal:'right',vertical:'middle'};s.font={size:11};
-    ws.getRow(2).height=22;
-    // 表データ
-    function L(addr,txt){var c=ws.getCell(addr);c.value=txt;c.alignment={horizontal:'center',vertical:'middle'};c.font={size:11};setBorder(c);}
-    function V(addr,txt){var c=ws.getCell(addr);c.value=txt;c.alignment={horizontal:'left',vertical:'middle',wrapText:true};c.font={size:11};setBorder(c);}
-    function blocks(startRow,sec,n,med){
-      var r=startRow;
-      // セクション縦結合 A
-      ws.mergeCells('A'+r+':A'+(r+2));
-      var a=ws.getCell('A'+r);a.value=sec;a.alignment={horizontal:'center',vertical:'middle',wrapText:true};a.font={size:11,bold:true};
-      if(med){
-        L('B'+r,'医療機関名');ws.mergeCells('C'+r+':D'+r);V('C'+r,val(n+'med'));
-        L('B'+(r+1),'氏　名');ws.mergeCells('C'+(r+1)+':D'+(r+1));V('C'+(r+1),val(n+'name'));
-        L('B'+(r+2),'電話番号');ws.mergeCells('C'+(r+2)+':D'+(r+2));V('C'+(r+2),val(n+'tel'));
-      }else{
-        L('B'+r,'氏　名');V('C'+r,val(n+'name'));
-        var d=ws.getCell('D'+r);d.value={richText:[{text:'続柄  ',font:{size:9}},{text:val(n+'rel'),font:{size:11}}]};d.alignment={horizontal:'left',vertical:'middle',wrapText:true};setBorder(d);
-        L('B'+(r+1),'住　所');ws.mergeCells('C'+(r+1)+':D'+(r+1));V('C'+(r+1),val(n+'addr'));
-        L('B'+(r+2),'電話番号');ws.mergeCells('C'+(r+2)+':D'+(r+2));V('C'+(r+2),val(n+'tel'));
-      }
-      // セクション側の枠（A列）
-      setBorder(ws.getCell('A'+r));
-      [r,r+1,r+2].forEach(function(rr){ws.getRow(rr).height=30;});
-    }
-    blocks(3,'連絡先①','c1',false);
-    blocks(6,'連絡先②','c2',false);
-    blocks(9,'かかりつけ医','k',true);
-    ws.pageSetup.printArea='A1:D11';
-
-    var buf=await wb.xlsx.writeBuffer();
-    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var files=[{name:'[Content_Types].xml',data:CT_XML},{name:'_rels/.rels',data:RELS_XML},{name:'word/document.xml',data:buildDocXml()}];
+    var blob=zipStore(files);
     var nm=val('self')?('緊急時の連絡先_'+val('self')):'緊急時の連絡先';
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm+'.xlsx';
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm+'.docx';
     document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
-    toast('Excelを出力しました');
-  }catch(e){toast('Excel出力に失敗しました');console.error(e);}
+    toast('Wordを出力しました');
+  }catch(e){toast('Word出力に失敗しました');console.error(e);}
   finally{btn.disabled=false;}
 });
 </script>
