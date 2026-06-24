@@ -378,8 +378,8 @@ function itemRowsDocx(list){
       var n=it.items.length;
       it.items.forEach(function(s,i){
         var cells=[];
-        if(i===0)cells.push(cell(para(it.cat,{align:'center',b:true,sz:18}),{w:600,vMerge:'restart',vertical:true,shade:'F0F0F0'}));
-        else cells.push(cell('<w:p/>',{w:600,vMerge:'continue',vertical:true,shade:'F0F0F0'}));
+        if(i===0)cells.push(cell(para(it.cat.split('').join('\n'),{align:'center',b:true,sz:18}),{w:600,vMerge:'restart',shade:'F0F0F0'}));
+        else cells.push(cell('<w:p/>',{w:600,vMerge:'continue',shade:'F0F0F0'}));
         cells.push(NB(s.name,2600));cells.push(purCellDocx(s,3766));cells.push(V(val('riyu_'+s.k),3500));
         rows.push(row(cells));
       });
