@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
 :root{
   --bg:#eef1f4;--card:#fff;--line:#dde3ea;--ink:#1d2733;--ink2:#5a6877;--muted:#8b97a5;
@@ -143,7 +142,7 @@ textarea{resize:vertical;min-height:48px;line-height:1.5}
 <div class="actionbar"><div class="inner">
   <button class="btn btn-ghost" id="clearBtn">クリア</button>
   <button class="btn btn-print" id="printBtn">印刷/PDF</button>
-  <button class="btn btn-excel" id="excelBtn">Excel出力</button>
+  <button class="btn btn-excel" id="wordBtn">Word出力</button>
 </div></div>
 <div class="toast" id="toast"></div>
 
@@ -306,73 +305,140 @@ document.getElementById('clearBtn').addEventListener('click',function(){
   document.querySelectorAll('input,textarea').forEach(function(i){i.value='';});
 });
 
-/* ===== Excel出力 ===== */
-function setB(c){c.border={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};}
-function purposeText(it){
-  var sel=selAll('pur_'+it.k);
-  var parts=it.pur.map(function(p){return box(sel.indexOf(p)>=0)+p;});
-  if(it.other)parts.push(box(sel.indexOf('その他')>=0)+'その他（'+val('other_'+it.k)+'）');
-  var s=parts.join('　');
-  if(it.note)s+='\n※ '+it.note;
-  return s;
+/* ===== Word(.docx)出力（元のWord様式を再現） ===== */
+// --- 最小限のZIP(無圧縮)書き出し ---
+var CRC_T=(function(){var t=[];for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(u8){var c=0xFFFFFFFF;for(var i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function strU8(s){return new TextEncoder().encode(s);}
+function zipStore(files){
+  var parts=[],central=[],offset=0;
+  function u16(n){return [n&255,(n>>8)&255];}
+  function u32(n){return [n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];}
+  files.forEach(function(f){
+    var data=typeof f.data==='string'?strU8(f.data):f.data;
+    var name=strU8(f.name);var crc=crc32(data);
+    var lh=[].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0));
+    parts.push(new Uint8Array(lh),name,data);
+    var ch=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset));
+    central.push(new Uint8Array(ch),name);
+    offset+=30+name.length+data.length;
+  });
+  var cdStart=offset,cdSize=0;central.forEach(function(c){cdSize+=c.length;});
+  var end=[].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cdSize),u32(cdStart),u16(0));
+  return new Blob(parts.concat(central,[new Uint8Array(end)]),{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
-function buildSheet(wb,name,list,withConsent){
-  var ws=wb.addWorksheet(name,{pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:1,margins:{left:0.4,right:0.4,top:0.5,bottom:0.5,header:0.2,footer:0.2}}});
-  ws.columns=[{width:4},{width:16},{width:40},{width:34}];
-  var r=1;
-  ws.mergeCells('A'+r+':D'+r);var t=ws.getCell('A'+r);t.value='福祉用具購入理由書';t.font={size:14,bold:true};r++;
-  ws.mergeCells('A'+r+':D'+r);ws.getCell('A'+r).value='注意・購入した福祉用具それぞれについて記入してください。';ws.getCell('A'+r).font={size:9};r++;
-  function hl(addr,v){var c=ws.getCell(addr);c.value=v;c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.font={bold:true,size:10};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF0F0F0'}};setB(c);}
-  function vc(addr,v){var c=ws.getCell(addr);c.value=v;c.alignment={vertical:'middle',wrapText:true};c.font={size:10};setB(c);}
-  // header
-  hl('A'+r,'被保険者番号');ws.mergeCells('B'+r+':B'+r);vc('B'+r,val('hihoNo'));hl('C'+r,'被保険者氏名');vc('D'+r,val('hihoName'));r++;
-  hl('A'+r,'住所');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('hihoAddr'));r++;
-  hl('A'+r,'要介護度');ws.mergeCells('B'+r+':D'+r);vc('B'+r,'津山市　'+(selOne('kaigo')||''));r++;
-  // table header
-  ws.mergeCells('A'+r+':B'+r);hl('A'+r,'福祉用具の種類');hl('C'+r,'購入目的及び期待する効果（＊該当にチェック）');hl('D'+r,'購入理由（＊具体的に）');r++;
+// --- OOXML 生成ヘルパー ---
+function xesc(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function run(text,o){o=o||{};var rpr='';if(o.b)rpr+='<w:b/>';if(o.sz){rpr+='<w:sz w:val="'+o.sz+'"/><w:szCs w:val="'+o.sz+'"/>';}rpr=rpr?'<w:rPr>'+rpr+'</w:rPr>':'';
+  var ps=(''+text).split('\n'),t='';ps.forEach(function(p,i){if(i)t+='<w:br/>';t+='<w:t xml:space="preserve">'+xesc(p)+'</w:t>';});
+  return '<w:r>'+rpr+t+'</w:r>';}
+function para(text,o){o=o||{};var jc=o.align?'<w:jc w:val="'+o.align+'"/>':'';return '<w:p><w:pPr>'+jc+'<w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'+run(text,o)+'</w:p>';}
+function cell(content,o){o=o||{};var pr='<w:tcPr><w:tcW w:w="'+(o.w||0)+'" w:type="dxa"/>';
+  if(o.span)pr+='<w:gridSpan w:val="'+o.span+'"/>';
+  if(o.vMerge)pr+='<w:vMerge w:val="'+o.vMerge+'"/>';
+  pr+='<w:vAlign w:val="'+(o.valign||'center')+'"/>';
+  if(o.vertical)pr+='<w:textDirection w:val="tbRl"/>';
+  if(o.shade)pr+='<w:shd w:val="clear" w:color="auto" w:fill="'+o.shade+'"/>';
+  pr+='</w:tcPr>';return '<w:tc>'+pr+(content||'<w:p/>')+'</w:tc>';}
+function row(cells){return '<w:tr>'+cells.join('')+'</w:tr>';}
+function table(grid,rows){
+  var bd='<w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/></w:tblBorders>';
+  var g=grid.map(function(w){return '<w:gridCol w:w="'+w+'"/>';}).join('');
+  return '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'+bd+'</w:tblPr><w:tblGrid>'+g+'</w:tblGrid>'+rows.join('')+'</w:tbl>';}
+function L(text,w,span){return cell(para(text,{align:'center',b:true,sz:20}),{w:w,span:span,shade:'F0F0F0'});}
+function V(text,w,span){return cell(para(text,{sz:20}),{w:w,span:span});}
+function NB(text,w,span){return cell(para(text,{b:true,sz:20}),{w:w,span:span});}
+function purCellDocx(it,w){
+  var sel=selAll('pur_'+it.k);
+  var line=it.pur.map(function(p){return box(sel.indexOf(p)>=0)+p;});
+  if(it.other)line.push(box(sel.indexOf('その他')>=0)+'その他（'+val('other_'+it.k)+'）');
+  var content=para(line.join('　'),{sz:18});
+  if(it.note)content+=para('※ '+it.note,{sz:16});
+  return cell(content,{w:w});
+}
+function kaigoTextDocx(){var v=selOne('kaigo');function m(label,num){return v===(label+num)?('【'+num+'】'):(''+num);}
+  return '要支援　'+m('要支援',1)+'・'+m('要支援',2)+'　　要介護　'+m('要介護',1)+'・'+m('要介護',2)+'・'+m('要介護',3)+'・'+m('要介護',4)+'・'+m('要介護',5);}
+function headerRowsDocx(){return [
+  row([L('被保険者番号',1800),V(val('hihoNo'),3433),L('被保険者氏名',1800),V(val('hihoName'),3433)]),
+  row([L('住　所',1800),V(val('hihoAddr'),8666,3)]),
+  row([L('要介護度',1800),V('津山市　　'+kaigoTextDocx(),8666,3)])
+];}
+function itemHeaderDocx(){return row([
+  cell(para('福祉用具の種類',{align:'center',b:true,sz:18}),{w:3200,span:2,shade:'F0F0F0'}),
+  cell(para('購入目的及び期待する効果（＊該当するものにチェック）',{align:'center',b:true,sz:18}),{w:3766,shade:'F0F0F0'}),
+  cell(para('購入理由（＊具体的に記入してください）',{align:'center',b:true,sz:18}),{w:3500,shade:'F0F0F0'})
+]);}
+function itemRowsDocx(list){
+  var rows=[];
   list.forEach(function(it){
     if(it.cat){
-      var start=r;
-      it.items.forEach(function(s){
-        ws.getCell('A'+r).value=(r===start?it.cat:'');var ac=ws.getCell('A'+r);ac.alignment={horizontal:'center',vertical:'middle',textRotation:255};ac.font={bold:true,size:9};setB(ac);
-        vc('B'+r,s.name);ws.getCell('B'+r).font={bold:true,size:10};
-        vc('C'+r,purposeText(s));vc('D'+r,val('riyu_'+s.k));
-        ws.getRow(r).height=Math.max(28,(it.items?28:28));r++;
+      var n=it.items.length;
+      it.items.forEach(function(s,i){
+        var cells=[];
+        if(i===0)cells.push(cell(para(it.cat,{align:'center',b:true,sz:18}),{w:600,vMerge:'restart',vertical:true,shade:'F0F0F0'}));
+        else cells.push(cell('<w:p/>',{w:600,vMerge:'continue',vertical:true,shade:'F0F0F0'}));
+        cells.push(NB(s.name,2600));cells.push(purCellDocx(s,3766));cells.push(V(val('riyu_'+s.k),3500));
+        rows.push(row(cells));
       });
-      ws.mergeCells('A'+start+':A'+(r-1));
     }else{
-      ws.mergeCells('A'+r+':B'+r);vc('A'+r,it.name);ws.getCell('A'+r).font={bold:true,size:10};ws.getCell('A'+r).alignment={vertical:'middle',wrapText:true};
-      vc('C'+r,purposeText(it));vc('D'+r,val('riyu_'+it.k));ws.getRow(r).height=30;r++;
+      rows.push(row([NB(it.name,3200,2),purCellDocx(it,3766),V(val('riyu_'+it.k),3500)]));
     }
   });
-  r++;
-  if(withConsent){
-    ws.mergeCells('A'+r+':D'+r);var cc=ws.getCell('A'+r);
-    var on=selOne('consent')==='確認済み';
-    cc.value=box(on)+' 内容を確認した上で、必ずチェックしてください。\n以下のとおり、利用者へ説明をし、同意を得ています。\n福祉用具の貸与と販売の選択に当たって必要な情報（'+CONSENT_LINES.join('／')+' 等）を十分に考慮し、慎重に購入の判断をするべきであること。\n\n'+TERMS.join('\n');
-    cc.alignment={vertical:'top',wrapText:true};cc.font={size:9};setB(cc);ws.getRow(r).height=150;r+=2;
-  }
-  // maker
-  hl('A'+r,'理由書作成者');ws.mergeCells('B'+r+':D'+r);vc('B'+r,'');r++;
-  hl('A'+r,'氏名');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuName'));r++;
-  hl('A'+r,'事業者名');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuOffice'));r++;
-  hl('A'+r,'住所');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuAddr'));r++;
-  hl('A'+r,'電話番号');ws.mergeCells('B'+r+':D'+r);vc('B'+r,val('sakuTel'));r++;
-  return ws;
+  return rows;
 }
-document.getElementById('excelBtn').addEventListener('click',async function(){
+function makerRowsDocx(){return [
+  row([L('氏　名',1800),V(val('sakuName'),8666)]),
+  row([L('事業者名',1800),V(val('sakuOffice'),8666)]),
+  row([L('住　所',1800),V(val('sakuAddr'),8666)]),
+  row([L('電話番号',1800),V(val('sakuTel'),8666)])
+];}
+function consentParasDocx(){
+  var on=selOne('consent')==='確認済み';
+  var out=para(box(on)+'　内容を確認した上で、必ずチェックしてください。',{sz:18,b:true});
+  out+=para('以下のとおり、利用者へ説明をし、同意を得ています。',{sz:18});
+  out+=para('福祉用具の貸与と販売の選択に当たって、必要な情報は、',{sz:18});
+  CONSENT_LINES.forEach(function(l){out+=para('　・'+l,{sz:18});});
+  out+=para('等があり、以上の点を十分に考慮し、慎重に購入の判断をするべきであること。',{sz:18});
+  out+=para('',{});
+  TERMS.forEach(function(t){out+=para(t,{sz:16});});
+  return out;
+}
+function titleBlockDocx(){return para('福祉用具購入理由書',{align:'center',b:true,sz:32})+para('注意・購入した福祉用具それぞれについて記入してください。',{sz:16});}
+function buildDocXml(){
+  var b='';
+  b+=titleBlockDocx();
+  b+=table([1800,3433,1800,3433],headerRowsDocx());
+  b+=para('',{});
+  b+=table([600,2600,3766,3500],[itemHeaderDocx()].concat(itemRowsDocx(PAGE1)));
+  b+=para('',{});
+  b+=para('【理由書作成者】',{b:true,sz:18});
+  b+=table([1800,8666],makerRowsDocx());
+  b+='<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+  b+=titleBlockDocx();
+  b+=table([1800,3433,1800,3433],headerRowsDocx());
+  b+=para('',{});
+  b+=table([600,2600,3766,3500],[itemHeaderDocx()].concat(itemRowsDocx(PAGE2)));
+  b+=para('',{});
+  b+=consentParasDocx();
+  b+=para('',{});
+  b+=para('【理由書作成者】',{b:true,sz:18});
+  b+=table([1800,8666],makerRowsDocx());
+  b+=para('',{});
+  var sect='<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+b+sect+'</w:body></w:document>';
+}
+var CT_XML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
+var RELS_XML='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+document.getElementById('wordBtn').addEventListener('click',function(){
   var btn=this;btn.disabled=true;
   try{
-    var wb=new ExcelJS.Workbook();
-    buildSheet(wb,'販売品目',PAGE1,false);
-    buildSheet(wb,'貸与・販売選択品目',PAGE2,true);
-    var buf=await wb.xlsx.writeBuffer();
-    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var files=[{name:'[Content_Types].xml',data:CT_XML},{name:'_rels/.rels',data:RELS_XML},{name:'word/document.xml',data:buildDocXml()}];
+    var blob=zipStore(files);
     var nm=val('hihoName')?('福祉用具購入理由書_'+val('hihoName')):'福祉用具購入理由書';
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm+'.xlsx';
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm+'.docx';
     document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
-    toast('Excelを出力しました');
-  }catch(e){toast('Excel出力に失敗しました');console.error(e);}
+    toast('Wordを出力しました');
+  }catch(e){toast('Word出力に失敗しました');console.error(e);}
   finally{btn.disabled=false;}
 });
 </script>
