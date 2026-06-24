@@ -93,7 +93,7 @@ textarea{resize:vertical;min-height:48px;line-height:1.5}
 <div class="topbar">
   <a class="home" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>ホーム</a>
   <h1>福祉用具購入理由書</h1>
-  <div class="sub">スマホで入力 → Excel様式で出力・印刷／PDF</div>
+  <div class="sub">スマホで入力 → Word様式で出力・印刷／PDF</div>
 </div>
 
 <div class="wrap">
@@ -340,19 +340,22 @@ function cell(content,o){o=o||{};var pr='<w:tcPr><w:tcW w:w="'+(o.w||0)+'" w:typ
   if(o.vertical)pr+='<w:textDirection w:val="tbRl"/>';
   if(o.shade)pr+='<w:shd w:val="clear" w:color="auto" w:fill="'+o.shade+'"/>';
   pr+='</w:tcPr>';return '<w:tc>'+pr+(content||'<w:p/>')+'</w:tc>';}
-function row(cells,h){return '<w:tr><w:trPr><w:trHeight w:val="'+(h||540)+'" w:hRule="atLeast"/></w:trPr>'+cells.join('')+'</w:tr>';}
+function row(cells,h){var pr=h?'<w:trPr><w:trHeight w:val="'+h+'" w:hRule="atLeast"/></w:trPr>':'';return '<w:tr>'+pr+cells.join('')+'</w:tr>';}
 function table(grid,rows){
   var bd='<w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/></w:tblBorders>';
   var g=grid.map(function(w){return '<w:gridCol w:w="'+w+'"/>';}).join('');
   return '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>'+bd+'</w:tblPr><w:tblGrid>'+g+'</w:tblGrid>'+rows.join('')+'</w:tbl>';}
+function tableNB(grid,rows){ // 罫線なし
+  var g=grid.map(function(w){return '<w:gridCol w:w="'+w+'"/>';}).join('');
+  return '<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders></w:tblPr><w:tblGrid>'+g+'</w:tblGrid>'+rows.join('')+'</w:tbl>';}
 function L(text,w,span){return cell(para(text,{align:'center',b:true,sz:20}),{w:w,span:span,shade:'F0F0F0'});}
 function V(text,w,span){return cell(para(text,{sz:20}),{w:w,span:span});}
 function NB(text,w,span){return cell(para(text,{b:true,sz:20}),{w:w,span:span});}
 function purCellDocx(it,w){
   var sel=selAll('pur_'+it.k);
-  var line=it.pur.map(function(p){return box(sel.indexOf(p)>=0)+p;});
-  if(it.other)line.push(box(sel.indexOf('その他')>=0)+'その他（'+val('other_'+it.k)+'）');
-  var content=para(line.join('　'),{sz:18});
+  var content='';
+  it.pur.forEach(function(p){content+=para(box(sel.indexOf(p)>=0)+p,{sz:18});});
+  if(it.other)content+=para(box(sel.indexOf('その他')>=0)+'その他（'+val('other_'+it.k)+'）',{sz:18});
   if(it.note)content+=para('※ '+it.note,{sz:16});
   return cell(content,{w:w});
 }
@@ -387,10 +390,8 @@ function itemRowsDocx(list){
   return rows;
 }
 function makerRowsDocx(){return [
-  row([L('氏　名',1800),V(val('sakuName'),8666)]),
-  row([L('事業者名',1800),V(val('sakuOffice'),8666)]),
-  row([L('住　所',1800),V(val('sakuAddr'),8666)]),
-  row([L('電話番号',1800),V(val('sakuTel'),8666)])
+  row([L('氏　名',1500),V(val('sakuName'),3733),L('事業者名',1500),V(val('sakuOffice'),3733)]),
+  row([L('住　所',1500),V(val('sakuAddr'),3733),L('電話番号',1500),V(val('sakuTel'),3733)])
 ];}
 function consentParasDocx(){
   var on=selOne('consent')==='確認済み';
@@ -403,7 +404,10 @@ function consentParasDocx(){
   TERMS.forEach(function(t){out+=para(t,{sz:16});});
   return out;
 }
-function titleBlockDocx(){return para('福祉用具購入理由書',{align:'center',b:true,sz:32})+para('注意・購入した福祉用具それぞれについて記入してください。',{sz:16});}
+function titleBlockDocx(){return tableNB([6466,4000],[row([
+  cell(para('福祉用具購入理由書',{b:true,sz:30}),{w:6466,valign:'bottom'}),
+  cell(para('注意・購入した福祉用具それぞれについて記入してください。',{sz:16}),{w:4000,valign:'bottom'})
+])]);}
 function buildDocXml(){
   var b='';
   b+=titleBlockDocx();
@@ -411,8 +415,8 @@ function buildDocXml(){
   b+=para('',{});
   b+=table([600,2600,3766,3500],[itemHeaderDocx()].concat(itemRowsDocx(PAGE1)));
   b+=para('',{});
-  b+=para('【理由書作成者】',{b:true,sz:18});
-  b+=table([1800,8666],makerRowsDocx());
+  b+=para('◇理由書作成者',{b:true,sz:20});
+  b+=table([1500,3733,1500,3733],makerRowsDocx());
   b+='<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
   b+=titleBlockDocx();
   b+=table([1800,3433,1800,3433],headerRowsDocx());
@@ -421,8 +425,8 @@ function buildDocXml(){
   b+=para('',{});
   b+=consentParasDocx();
   b+=para('',{});
-  b+=para('【理由書作成者】',{b:true,sz:18});
-  b+=table([1800,8666],makerRowsDocx());
+  b+=para('◇理由書作成者',{b:true,sz:20});
+  b+=table([1500,3733,1500,3733],makerRowsDocx());
   b+=para('',{});
   var sect='<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="720" w:bottom="720" w:left="720" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr>';
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+b+sect+'</w:body></w:document>';
