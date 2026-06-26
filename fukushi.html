@@ -86,6 +86,7 @@ textarea{resize:vertical;min-height:48px;line-height:1.5}
   html,body{background:#fff;padding:0;margin:0}
   .topbar,.wrap,.actionbar,.toast{display:none!important}
   #printArea{display:block!important}
+  .pg1 .fk-tbl td{padding-top:4mm;padding-bottom:4mm}
 }
 </style>
 </head>
@@ -291,7 +292,7 @@ function consentBlock(){
 }
 function fillPrint(){
   var pa=document.getElementById('printArea');
-  var p1='<div class="fk-page"><div class="fk-title">福祉用具購入理由書</div><div class="fk-note">注意・購入した福祉用具それぞれについて記入してください。</div>'+
+  var p1='<div class="fk-page pg1"><div class="fk-title">福祉用具購入理由書</div><div class="fk-note">注意・購入した福祉用具それぞれについて記入してください。</div>'+
     headerTbl()+tblOpen()+itemRows(PAGE1)+'</table>'+makerTbl()+'</div>';
   var p2='<div class="fk-page"><div class="fk-title">福祉用具購入理由書</div><div class="fk-note">注意・購入した福祉用具それぞれについて記入してください。</div>'+
     headerTbl()+tblOpen()+itemRows(PAGE2)+'</table>'+consentBlock()+makerTbl()+'</div>';
