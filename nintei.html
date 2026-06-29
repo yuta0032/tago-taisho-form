@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="hospitals.js" defer></script>
 <script src="postal.js" defer></script>
 <style>
@@ -224,7 +225,9 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
 </div>
 
 <div class="actionbar"><div class="inner">
+  <button class="btn btn-ghost" id="importBtn">Excel読込</button>
   <button class="btn btn-ghost" id="clearBtn">クリア</button>
+  <input type="file" id="importFile" accept=".xlsx,.xlsm" style="display:none">
   <button class="btn btn-print" id="printBtn">印刷/PDF</button>
   <button class="btn btn-excel" id="excelBtn">Excel出力</button>
 </div></div>
@@ -447,6 +450,53 @@ document.getElementById('excelBtn').addEventListener('click',async function(){
   }catch(err){console.error(err);toast('出力エラー: '+err.message);}
   finally{btn.disabled=false;btn.textContent=lbl;}
 });
+
+/* ===== 記入済みExcel読み込み → フォーム復元（fillWorkbookの逆） ===== */
+var ERAR={'令和':'令','平成':'平','昭和':'昭','大正':'大','明治':'明'};
+function eraOf(s){for(var k in ERAR){if(s&&String(s).indexOf(k)>=0)return ERAR[k];}return '';}
+function setVal(k,v){var e=document.querySelector('[data-k="'+k+'"]');if(e&&v!=null&&String(v).trim()!==''){e.value=String(v).trim();e.dispatchEvent(new Event('input',{bubbles:true}));}}
+function setChip(g,v){var box=document.querySelector('[data-grp="'+g+'"]');if(!box)return;box.querySelectorAll('.chip').forEach(function(c){if(c.dataset.v===v)c.classList.add('on');else if(box.hasAttribute('data-single'))c.classList.remove('on');});}
+function pYMD(s){var m=String(s).match(/(\d+)\s*年\s*(\d+)\s*月\s*(\d+)?/);return m?{y:m[1],mo:m[2],d:m[3]||''}:{};}
+function importSheet(ws){
+  function W(ref){var c=ws[ref];if(!c)return '';return c.w!==undefined?String(c.w):(c.v!=null?String(c.v):'');}
+  var T={furigana:'T7',name:'T8',zip:'W10',addr:'AD10',tel:'BE12',kigo:'X6',bango:'AQ6',edaban:'BV6',
+    hokenName:'T5',hokenNo:'BH5',liveAddr:'T17',liveName:'T18',liveTel:'T19',
+    docName:'T28',hospName:'AX28',hospZip:'W30',hospAddr:'AD30',hospTel:'BE31',tokutei:'O35',
+    tachiaiFuri:'AK46',tachiaiName:'AK47',tachiaiRel:'BB46',tachiaiTel:'BO46',biko:'B51'};
+  Object.keys(T).forEach(function(k){setVal(k,W(T[k]));});
+  setVal('apEra',eraOf(W('BH3')));setVal('apY',W('BN3'));setVal('apM',W('BT3'));setVal('apD',W('BZ3'));
+  var hc=['T4','W4','Z4','AC4','AF4','AI4','AL4','AO4','AR4','AU4'];setVal('hihoNo',hc.map(W).join(''));
+  var kc=['BH4','BJ4','BL4','BN4','BP4','BR4','BT4','BV4','BX4','BZ4','CB4','CD4'];var kj=kc.map(W).join('');if(/\d/.test(kj))setVal('kojin',kj);
+  var b=pYMD(W('BH7'));setVal('bY',b.y);setVal('bM',b.mo);setVal('bD',b.d);
+  var re=/(令和|平成|昭和|大正|明治)?\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日/g,arr=[],mm,t14=W('T14');
+  while((mm=re.exec(t14))){arr.push(mm);}
+  if(arr[0]){setVal('vfEra',eraOf(arr[0][1]));setVal('vfY',arr[0][2]);setVal('vfM',arr[0][3]);setVal('vfD',arr[0][4]);}
+  if(arr[1]){setVal('vtEra',eraOf(arr[1][1]));setVal('vtY',arr[1][2]);setVal('vtM',arr[1][3]);setVal('vtD',arr[1][4]);}
+  setVal('lEra',eraOf(W('BV29')));setVal('lM',W('BZ29'));
+  if(W('B39').indexOf('\u25a0')>=0)setChip('lostCert','\u7d1b\u5931');
+  if(W('T37').indexOf('\u25a0')>=0)setChip('rosai','\u7121');else if(W('Z37').indexOf('\u25a0')>=0)setChip('rosai','\u6709');
+  if(W('O46').indexOf('\u25a0')>=0)setChip('tachiai','\u7121');else if(W('V46').indexOf('\u25a0')>=0)setChip('tachiai','\u6709');
+  if(W('E16').indexOf('\u25a0')>=0)setChip('live','\u4f4f\u6240\u5730\u4ee5\u5916');
+}
+function chooseSheet(wb){
+  var names=wb.SheetNames.filter(function(n){return n!=='\u539f\u672c'&&!/\u90f5\u4fbf|DB/.test(n);});
+  if(names.length===0)names=wb.SheetNames.slice();
+  if(names.length===1){importSheet(wb.Sheets[names[0]]);toast(names[0]+' \u3092\u8aad\u307f\u8fbc\u307f\u307e\u3057\u305f');return;}
+  var ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center';
+  var bx=document.createElement('div');bx.style.cssText='background:#fff;border-radius:14px;padding:18px;max-width:88%;max-height:80%;overflow:auto;width:320px';
+  bx.innerHTML='<div style="font-weight:700;margin-bottom:10px">\u3069\u306e\u5229\u7528\u8005\u3092\u8aad\u307f\u8fbc\u307f\u307e\u3059\u304b\uff1f</div>';
+  names.forEach(function(n){var b=document.createElement('button');b.textContent=n;b.style.cssText='display:block;width:100%;text-align:left;padding:12px;margin:6px 0;border:1px solid #dde3ea;border-radius:10px;background:#fbfcfd;font-size:15px;cursor:pointer';b.onclick=function(){document.body.removeChild(ov);importSheet(wb.Sheets[n]);toast(n+' \u3092\u8aad\u307f\u8fbc\u307f\u307e\u3057\u305f');};bx.appendChild(b);});
+  var cc=document.createElement('button');cc.textContent='\u30ad\u30e3\u30f3\u30bb\u30eb';cc.style.cssText='display:block;width:100%;padding:10px;margin-top:8px;border:0;background:#eef1f4;border-radius:10px;cursor:pointer';cc.onclick=function(){document.body.removeChild(ov);};bx.appendChild(cc);
+  ov.appendChild(bx);document.body.appendChild(ov);
+}
+document.getElementById('importBtn').addEventListener('click',function(){document.getElementById('importFile').click();});
+document.getElementById('importFile').addEventListener('change',function(e){
+  var f=e.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(ev){try{var wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});chooseSheet(wb);}catch(err){toast('\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f');console.error(err);}e.target.value='';};
+  rd.readAsArrayBuffer(f);
+});
+
 </script>
 </body>
 </html>
