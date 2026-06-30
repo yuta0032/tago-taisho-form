@@ -177,8 +177,8 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
     <div class="group-title"><span class="n">代</span>提出代行者（自事業所・自動保存）</div>
     <div class="card">
       <div class="field"><div class="lab">名称・氏名</div><input type="text" data-k="ofcName" placeholder="○○居宅介護支援事業所"></div>
-      <div class="field"><div class="lab">〒</div><input type="text" data-k="ofcZip" placeholder="000-0000"></div>
-      <div class="field"><div class="lab">住所</div><input type="text" data-k="ofcAddr" placeholder="住所"></div>
+      <div class="field"><div class="lab">〒</div><input type="text" data-k="ofcZip" inputmode="numeric" placeholder="000-0000（住所を自動入力）" data-addr-lookup data-addr-target="ofcAddr"></div>
+      <div class="field"><div class="lab">住所</div><input type="text" data-k="ofcAddr" placeholder="住所" data-zip-lookup data-zip-target="ofcZip"></div>
       <div class="field"><div class="lab">電話</div><input type="text" data-k="ofcTel" inputmode="tel" placeholder="000-000-0000"></div>
     </div>
   </div>
