@@ -165,6 +165,24 @@ textarea{resize:vertical;min-height:64px;line-height:1.6}
     </div>
   </div>
 
+  <!-- 提出代行者 -->
+  <div class="group">
+    <div class="group-title"><span class="n">★</span>提出代行者（事業所情報・自動保存）</div>
+    <div class="card">
+      <div class="field"><div class="lab">名称又は氏名</div><input type="text" data-k="daikoName" placeholder="例）○○居宅介護支援事業所"></div>
+      <div class="field"><div class="lab">種別</div>
+        <div class="chips" data-single data-grp="daikoType"><button class="chip" data-v="地域包括支援センター">地域包括</button><button class="chip" data-v="指定居宅介護支援事業者">居宅介護支援</button><button class="chip" data-v="介護保険施設">介護保険施設</button></div>
+      </div>
+      <div class="field"><div class="lab">続柄</div><input type="text" data-k="daikoRel" placeholder="例）ケアマネ"></div>
+      <div class="field"><div class="lab">所在地・電話</div>
+        <input type="text" data-k="daikoZip" inputmode="numeric" placeholder="〒（住所を自動入力）" data-addr-lookup data-addr-target="daikoAddr" style="margin-bottom:8px">
+        <input type="text" data-k="daikoAddr" placeholder="所在地" data-zip-lookup data-zip-target="daikoZip" style="margin-bottom:8px">
+        <input type="text" data-k="daikoTel" inputmode="tel" placeholder="電話番号">
+      </div>
+      <div class="note">事業所情報は自動保存され、次回も自動で入ります。</div>
+    </div>
+  </div>
+
   <!-- 主治医 -->
   <div class="group">
     <div class="group-title"><span class="n">4</span>主治医</div>
@@ -259,6 +277,7 @@ document.getElementById('clearBtn').addEventListener('click',function(){
   document.querySelectorAll('.chip.on').forEach(function(c){c.classList.remove('on');});
   document.querySelectorAll('input[type=text],input[type=number],textarea,select').forEach(function(i){i.value='';});
   setAppToday();
+  setTimeout(loadDaiko,0);
 });
 
 function b64ToBuf(b64){var bin=atob(b64);var len=bin.length;var u=new Uint8Array(len);for(var i=0;i<len;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
@@ -336,7 +355,7 @@ function fillWorkbook(wb){
   A.setIf('AD30',val('hospAddr'));
   A.setIf('BE31',val('hospTel'));
   var lw=wYMD('l');
-  A.setIf('BV29',lw.y);A.setIf('BZ29',lw.m);
+  A.setIf('BV29',lw.y);A.setIf('BV30',lw.m);
 
   // 第2号
   A.setIf('O35',val('tokutei'));
@@ -352,8 +371,22 @@ function fillWorkbook(wb){
   A.setIf('BB46',val('tachiaiRel'));
   A.setIf('BO46',val('tachiaiTel'));
 
-  // 備考（訪問調査の連絡事項：R51の空白行へ）
-  A.setIf('B51',val('biko'));
+  // 備考（訪問調査の連絡事項：記入欄 B49:CE50 の説明文の後へ追記）
+  var bikoVal=val('biko');
+  if(bikoVal){
+    var bikoLabel=A.gs('B49');
+    A.set('B49',bikoLabel+'\n\n'+bikoVal);
+    wb.worksheets[0].getCell('B49').alignment={wrapText:true,vertical:'top',horizontal:'left'};
+  }
+
+  // 提出代行者（事業所情報・汎用化）
+  var dN=val('daikoName');
+  if(dN)A.set('O21','該当に○（地域包括支援センター・指定居宅介護支援事業者・介護保険施設）\n\n'+dN);
+  var dT=selOne('daikoType'); if(dT)A.circle('O21',dT);
+  A.setIf('R23',val('daikoZip'));
+  A.setIf('Y23',val('daikoAddr'));
+  A.setIf('BG25',val('daikoTel'));
+  A.setIf('BS21',val('daikoRel'));
 }
 
 /* ===== Excel→印刷テーブル（実証済みエンジン・1シート） ===== */
@@ -450,6 +483,14 @@ document.getElementById('excelBtn').addEventListener('click',async function(){
   }catch(err){console.error(err);toast('出力エラー: '+err.message);}
   finally{btn.disabled=false;btn.textContent=lbl;}
 });
+
+/* ===== 提出代行者の自動保存（事業所情報） ===== */
+var DAIKO_KEYS=['daikoName','daikoZip','daikoAddr','daikoTel','daikoRel'];
+function saveDaiko(){var d={};DAIKO_KEYS.forEach(function(k){var e=document.querySelector('[data-k="'+k+'"]');if(e)d[k]=e.value;});d.daikoType=selOne('daikoType')||'';try{localStorage.setItem('nintei_daiko_v1',JSON.stringify(d));}catch(e){}}
+function loadDaiko(){try{var d=JSON.parse(localStorage.getItem('nintei_daiko_v1')||'{}');DAIKO_KEYS.forEach(function(k){var e=document.querySelector('[data-k="'+k+'"]');if(e&&d[k])e.value=d[k];});if(d.daikoType)setChip('daikoType',d.daikoType);}catch(e){}}
+DAIKO_KEYS.forEach(function(k){var e=document.querySelector('[data-k="'+k+'"]');if(e)e.addEventListener('input',saveDaiko);});
+(function(){var b=document.querySelector('[data-grp="daikoType"]');if(b)b.addEventListener('click',function(){setTimeout(saveDaiko,0);});})();
+loadDaiko();
 
 /* ===== 記入済みExcel読み込み → フォーム復元（fillWorkbookの逆） ===== */
 var ERAR={'令和':'令','平成':'平','昭和':'昭','大正':'大','明治':'明'};
