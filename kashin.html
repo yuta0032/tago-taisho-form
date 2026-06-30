@@ -351,6 +351,7 @@ function fillWorkbook(wb){
   if(selAll('lostCert').length)A.mark('B41',['被保険者証']);
   // 立会 r46,47 → +2
   var ta=selOne('tachiai'); if(ta)A.mark(ta==='無'?'O48':'V48',[ta]);
+  ['O48','V48'].forEach(function(r){var lc=wb.worksheets[0].getCell(r);var la=lc.alignment?Object.assign({},lc.alignment):{};la.vertical='middle';lc.alignment=la;});
   A.setIf('AK48',val('tachiaiName'));
   A.setIf('AK49',val('tachiaiFuri'));
   A.setIf('BB48',val('tachiaiRel'));
