@@ -366,6 +366,7 @@ function fillWorkbook(wb){
 
   // 同意・立会（同意署名 AE44/BF44 は手書き専用のため書き込まない）
   var ta=selOne('tachiai'); if(ta)A.mark(ta==='無'?'O46':'V46',[ta]);
+  ['O46','V46'].forEach(function(r){var lc=wb.worksheets[0].getCell(r);var la=lc.alignment?Object.assign({},lc.alignment):{};la.vertical='middle';lc.alignment=la;});
   A.setIf('AK46',val('tachiaiName'));
   A.setIf('AK47',val('tachiaiFuri'));
   A.setIf('BB46',val('tachiaiRel'));
@@ -386,7 +387,8 @@ function fillWorkbook(wb){
   A.setIf('R23',val('daikoZip'));
   A.setIf('Y23',val('daikoAddr'));
   A.setIf('BG25',val('daikoTel'));
-  A.setIf('BS21',val('daikoRel'));
+  A.set('BS21',val('daikoRel')||'ケアマネ');
+  wb.worksheets[0].getCell('BS21').alignment={textRotation:0,vertical:'middle',horizontal:'center'};
 }
 
 /* ===== Excel→印刷テーブル（実証済みエンジン・1シート） ===== */
